@@ -6,7 +6,7 @@ body {
   float: left;
   margin-right: 15px;
 }
-#startGameButton, #messageBox {
+button, #messageBox {
   font-size: 16px;
   margin-top: 15px;
 }

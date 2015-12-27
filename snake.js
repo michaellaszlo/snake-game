@@ -48,10 +48,19 @@ Snake.init = function () {
   this.messageBox = document.getElementById('messageBox');
   this.startGameButton = document.getElementById('startGameButton');
   this.startGameButton.onclick = this.startGame.bind(this);
+  this.pauseGameButton = document.getElementById('pauseGameButton');
+  this.pauseGameButton.onclick = this.pauseGame.bind(this);
+  this.pauseGameButton.style.display = 'none';
 };
 
 Snake.startGame = function () {
-  var snake, i;
+  var snake,
+      grid,
+      rowCount,
+      colCount,
+      numRows = this.numRows,
+      numCols = this.numCols,
+      i, x, y;
   this.startGameButton.disabled = true;
   this.direction = this.start.direction;
   snake = this.snake = new Array(this.start.length);
@@ -59,45 +68,92 @@ Snake.startGame = function () {
   for (i = snake.length - 2; i >= 0; --i) {
     snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
   }
+
+  grid = this.grid = new Array(numRows);
+  for (y = 0; y < numRows; ++y) {
+    grid[y] = new Array(numCols);
+  }
+  this.count = {
+    row: rowCount = new Array(numRows),
+    col: colCount = new Array(numCols)
+  };
+  for (y = 0; y < numRows; ++y) {
+    rowCount[y] = 0;
+  }
+  for (x = 0; x < numCols; ++x) {
+    colCount[x] = 0;
+  }
+  for (i = snake.length - 1; i >= 0; --i) {
+    x = snake[i].x;
+    y = snake[i].y;
+    grid[y][x] = 'snake';
+    ++rowCount[y];
+    ++colCount[x];
+  }
+
   this.food = {};
   this.placeFood();
   this.paintCanvas();
   this.setMessage('');
-  this.gameInterval = window.setInterval(this.updateGame.bind(this), 200);
+  this.pauseGameButton.style.display = 'inline';
+  this.gameInterval = window.setInterval(this.gameStep.bind(this), 200);
 };
 
-Snake.stopGame = function (message) {
-  this.setMessage(message +
-      '<br> ended with ' + this.snake.length + ' segments');
-  window.clearInterval(this.gameInterval);
-  this.startGameButton.disabled = false;
+Snake.pauseGame = function () {
+  if (this.paused) {
+    this.paused = false;
+    this.pauseGameButton.innerHTML = 'pause';
+    console.log(this.pauseGameButton);
+    this.gameInterval = window.setInterval(this.gameStep.bind(this), 200);
+  } else {
+    this.paused = true;
+    this.pauseGameButton.innerHTML = 'resume';
+    window.clearInterval(this.gameInterval);
+  }
+};
+
+Snake.putSnakeSegment = function (x, y) {
+  if (this.grid[y][x]) {
+    return false;
+  }
+  this.grid[y][x] = 'snake';
+  ++this.count.row[y];
+  ++this.count.col[x];
+  return true;
+};
+
+Snake.eraseSnakeSegment = function (x, y) {
+  this.grid[y][x] = null;
+  --this.count.row[y];
+  --this.count.col[x];
 };
 
 Snake.placeFood = function () {
   // Choose a random location that isn't occupied by the this.snake.
   var okay = false,
       snake = this.snake,
-      food = this.food;
+      food = this.food,
+      i;
   while (!okay) {
     food.x = Math.floor(Math.random() * this.numCols);
     food.y = Math.floor(Math.random() * this.numRows);
     okay = true;
-    for (var i = 0; i < snake.length; ++i) {
+    for (i = 0; i < snake.length; ++i) {
       if (snake[i].x == food.x && snake[i].y == food.y) {
         okay = false;
         break;
       }
     }
   }
-}
+};
 
 Snake.paintCell = function (x, y, color) {
+  var cellSize = this.size.cell,
+      gapSize = this.size.gap;
   this.context.fillStyle = color;
-  this.context.fillRect(x * this.size.cell + this.size.gap,
-                        y * this.size.cell + this.size.gap,
-                        this.size.cell - this.size.gap,
-                        this.size.cell - this.size.gap);
-}
+  this.context.fillRect(x * cellSize + gapSize, y * cellSize + gapSize,
+      cellSize - gapSize, cellSize - gapSize);
+};
 
 Snake.paintCanvas = function () {
   var head,
@@ -111,9 +167,9 @@ Snake.paintCanvas = function () {
   for (i = snake.length - 2; i >= 0; --i) {
     this.paintCell(snake[i].x, snake[i].y, this.color.snake.body);
   }
-}
+};
   
-Snake.updateGame = function () {
+Snake.gameStep = function () {
   var snake = this.snake,
       head = snake[snake.length - 1],
       x = head.x,
@@ -124,6 +180,7 @@ Snake.updateGame = function () {
 
   // Move the snake.
   tail = snake.shift();
+  this.eraseSnakeSegment(tail.x, tail.y);
   switch (this.direction) {
     case 'up': 
       snake.push(head = { x: x, y: y - 1 });
@@ -148,33 +205,41 @@ Snake.updateGame = function () {
     return;
   }
 
-  // Check for snake head colliding with snake body.
-  for (i = snake.length - 2; i >= 0; --i) {
-    if (snake[i].x == x && snake[i].y == y) {
-      this.stopGame('self-collision');
-      return;
-    }
+  // Check for head colliding with body.
+  if (!this.putSnakeSegment(head.x, head.y)) {
+    this.stopGame('self-collision');
+    return;
   }
 
   // If we ate a piece of food, reattach the tail and place new food.
   if (x == food.x && y == food.y) {
+    this.putSnakeSegment(tail.x, tail.y);
     snake.unshift(tail);
     this.setMessage(snake.length + ' segments');
     this.placeFood();
   }
-}
+};
+
+Snake.stopGame = function (message) {
+  this.setMessage(message +
+      '<br> ended with ' + this.snake.length + ' segments');
+  window.clearInterval(this.gameInterval);
+  this.startGameButton.disabled = false;
+  this.pauseGameButton.style.display = 'none';
+};
 
 Snake.keyDownHandler = function (event) {
   var keyCode = event.keyCode;
   if (keyCode in this.keyCodeToDir) {
     this.direction = this.keyCodeToDir[keyCode];
   }
-}
+};
 
 Snake.setMessage = function (message) {
   this.messageBox.innerHTML = message;
-}
+};
 
 window.onload = function () {
   Snake.init();
-}
+  Snake.startGame();
+};
