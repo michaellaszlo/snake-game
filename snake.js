@@ -1,28 +1,86 @@
-var canvas,
-    ctx,
-    currentDir,
-    startX = 1,
-    startY = 1,
-    startSnakeLength = 3,
-    snake,
-    cellSize = 18,
-    cellGap = 1,
-    foodColor = '#a2302a',
-    snakeBodyColor = '#2255a2',
-    snakeHeadColor = '#0f266b',
-    numRows = 10,
-    numCols = 10,
-    canvasWidth = numCols * cellSize,
-    canvasHeight = numRows * cellSize;
+var Snake = {
+  numRows: 10,
+  numCols: 10,
+  start: {
+    length: 3,
+    direction: 'right',
+    x: 1, y: 1
+  },
+  size: {
+    cell: 18,
+    gap: 1
+  },
+  color: {
+    food: '#a2302a',
+    snake: { body: '#2255a2', head: '#0f266b' }
+  },
+  dirToKeyCode: {  // Codes for arrow keys and W-A-S-D.
+    up: [38, 87],
+    right: [39, 68],
+    down: [40, 83],
+    left: [37, 65]
+  }
+};
 
-var food = {};
+Snake.init = function () {
+  var direction,
+      keyCode,
+      dirToKeyCode = this.dirToKeyCode,
+      keyCodeToDir = this.keyCodeToDir = {};
 
-function placeFood() {
-  // Find a random location that isn't occupied by the snake.
-  var okay = false;
+  this.canvas = document.getElementById('gameCanvas');
+  this.context = this.canvas.getContext('2d');
+  this.size.canvas = {
+    width: this.numCols * this.size.cell,
+    height: this.numRows * this.size.cell
+  };
+  this.canvas.width = this.size.canvas.width;
+  this.canvas.height = this.size.canvas.height;
+
+  // Invert the key mapping for easier lookup.
+  for (direction in dirToKeyCode) {
+    dirToKeyCode[direction].forEach(function (keyCode) {
+      keyCodeToDir[keyCode] = direction;
+    });
+  }
+  window.onkeydown = this.keyDownHandler.bind(this);
+
+  this.messageBox = document.getElementById('messageBox');
+  this.startGameButton = document.getElementById('startGameButton');
+  this.startGameButton.onclick = this.startGame.bind(this);
+};
+
+Snake.startGame = function () {
+  var snake, i;
+  this.startGameButton.disabled = true;
+  this.direction = this.start.direction;
+  snake = this.snake = new Array(this.start.length);
+  snake[snake.length - 1] = { x: this.start.x, y: this.start.y };
+  for (i = snake.length - 2; i >= 0; --i) {
+    snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
+  }
+  this.food = {};
+  this.placeFood();
+  this.paintCanvas();
+  this.setMessage('');
+  this.gameInterval = window.setInterval(this.updateGame.bind(this), 200);
+};
+
+Snake.stopGame = function (message) {
+  this.setMessage(message +
+      '<br> ended with ' + this.snake.length + ' segments');
+  window.clearInterval(this.gameInterval);
+  this.startGameButton.disabled = false;
+};
+
+Snake.placeFood = function () {
+  // Choose a random location that isn't occupied by the this.snake.
+  var okay = false,
+      snake = this.snake,
+      food = this.food;
   while (!okay) {
-    food.x = Math.floor(Math.random() * numCols);
-    food.y = Math.floor(Math.random() * numRows);
+    food.x = Math.floor(Math.random() * this.numCols);
+    food.y = Math.floor(Math.random() * this.numRows);
     okay = true;
     for (var i = 0; i < snake.length; ++i) {
       if (snake[i].x == food.x && snake[i].y == food.y) {
@@ -33,32 +91,40 @@ function placeFood() {
   }
 }
 
-function paintCell(x, y, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x * cellSize + cellGap,
-               y * cellSize + cellGap,
-               cellSize - cellGap,
-               cellSize - cellGap);
+Snake.paintCell = function (x, y, color) {
+  this.context.fillStyle = color;
+  this.context.fillRect(x * this.size.cell + this.size.gap,
+                        y * this.size.cell + this.size.gap,
+                        this.size.cell - this.size.gap,
+                        this.size.cell - this.size.gap);
 }
 
-function paintCanvas() {
-  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-  paintCell(food.x, food.y, foodColor);
-  var head = snake[snake.length - 1];
-  paintCell(head.x, head.y, snakeHeadColor);
-  for (var i = snake.length - 2; i >= 0; --i) {
-    paintCell(snake[i].x, snake[i].y, snakeBodyColor);
+Snake.paintCanvas = function () {
+  var head,
+      snake = this.snake,
+      i;
+  this.context.clearRect(0, 0,
+      this.size.canvas.width, this.size.canvas.height);
+  this.paintCell(this.food.x, this.food.y, this.color.food);
+  head = this.snake[this.snake.length - 1];
+  this.paintCell(head.x, head.y, this.color.snake.head);
+  for (i = snake.length - 2; i >= 0; --i) {
+    this.paintCell(snake[i].x, snake[i].y, this.color.snake.body);
   }
 }
   
-function updateGame() {
-  var head = snake[snake.length - 1],
+Snake.updateGame = function () {
+  var snake = this.snake,
+      head = snake[snake.length - 1],
       x = head.x,
-      y = head.y;
+      y = head.y,
+      food = this.food,
+      tail,
+      i;
 
   // Move the snake.
-  var tail = snake.shift();
-  switch (currentDir) {
+  tail = snake.shift();
+  switch (this.direction) {
     case 'up': 
       snake.push(head = { x: x, y: y - 1 });
       break;
@@ -72,85 +138,43 @@ function updateGame() {
       snake.push(head = { x: x - 1, y: y });
       break;
   }
-  paintCanvas();
+  this.paintCanvas();
   x = head.x;
   y = head.y;
 
   // Check for wall collision.
-  if (x < 0 || x >= numCols || y < 0 || y >= numRows) {
-    stopGame('wall collision');
+  if (x < 0 || x >= this.numCols || y < 0 || y >= this.numRows) {
+    this.stopGame('wall collision');
     return;
   }
 
   // Check for snake head colliding with snake body.
-  for (var i = snake.length - 2; i >= 0; --i) {
+  for (i = snake.length - 2; i >= 0; --i) {
     if (snake[i].x == x && snake[i].y == y) {
-      stopGame('self-collision');
+      this.stopGame('self-collision');
       return;
     }
   }
 
-  // Check for food.
+  // If we ate a piece of food, reattach the tail and place new food.
   if (x == food.x && y == food.y) {
-    placeFood();
     snake.unshift(tail);
-    setMessage(snake.length + ' segments');
+    this.setMessage(snake.length + ' segments');
+    this.placeFood();
   }
 }
 
-var dirToKeyCode = {  // Codes for arrow keys and W-A-S-D.
-      up: [38, 87],
-      right: [39, 68],
-      down: [40, 83],
-      left: [37, 65]
-    },
-    keyCodeToDir = {};  // Fill this from dirToKeyCode on page load.
-
-function keyDownHandler(e) {
-  var keyCode = e.keyCode;
-  if (keyCode in keyCodeToDir) {
-    currentDir = keyCodeToDir[keyCode];
+Snake.keyDownHandler = function (event) {
+  var keyCode = event.keyCode;
+  if (keyCode in this.keyCodeToDir) {
+    this.direction = this.keyCodeToDir[keyCode];
   }
 }
 
-function setMessage(s) {
-  document.getElementById('messageBox').innerHTML = s;
+Snake.setMessage = function (message) {
+  this.messageBox.innerHTML = message;
 }
-
-function startGame() {
-  currentDir = 'right';
-  snake = new Array(startSnakeLength);
-  snake[snake.length - 1] = { x: startX, y: startY };
-  for (var i = snake.length - 2; i >= 0; --i) {
-    snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
-  }
-  placeFood();
-  paintCanvas();
-  setMessage('');
-  gameInterval = setInterval(updateGame, 200);
-  startGameButton.disabled = true;
-}
-
-function stopGame(message) {
-  setMessage(message + '<br> ended with ' + snake.length + ' segments');
-  clearInterval(gameInterval);
-  startGameButton.disabled = false;
-}
-
-var gameInterval,
-    startGameButton;
 
 window.onload = function () {
-  canvas = document.getElementById('gameCanvas'),
-  ctx = canvas.getContext('2d');
-  canvas.width = numCols * cellSize;
-  canvas.height = numRows * cellSize;
-  Object.keys(dirToKeyCode).forEach(function (dir) {
-    dirToKeyCode[dir].forEach(function (keyCode) {
-      keyCodeToDir[keyCode] = dir;
-    })
-  });
-  document.addEventListener("keydown", keyDownHandler, false);
-  startGameButton = document.getElementById('startGameButton');
-  startGameButton.onclick = startGame;
+  Snake.init();
 }
