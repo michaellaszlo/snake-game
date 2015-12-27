@@ -3,7 +3,7 @@ var Snake = {
   numCols: 10,
   start: {
     length: 3,
-    direction: 'right',
+    direction: 'east',
     x: 1, y: 1
   },
   size: {
@@ -14,11 +14,15 @@ var Snake = {
     food: '#a2302a',
     snake: { body: '#2255a2', head: '#0f266b' }
   },
+  neighbor: {
+    x: { north: 0, east: 1, south: 0, west: -1 },
+    y: { north: -1, east: 0, south: 1, west: 0 }
+  },
   dirToKeyCode: {  // Codes for arrow keys and W-A-S-D.
-    up: [38, 87],
-    right: [39, 68],
-    down: [40, 83],
-    left: [37, 65]
+    north: [38, 87],
+    east: [39, 68],
+    south: [40, 83],
+    west: [37, 65]
   }
 };
 
@@ -172,35 +176,25 @@ Snake.paintCanvas = function () {
 Snake.gameStep = function () {
   var snake = this.snake,
       head = snake[snake.length - 1],
-      x = head.x,
-      y = head.y,
       food = this.food,
+      neighbor = this.neighbor,
+      direction = this.direction,
       tail,
       i;
 
   // Move the snake.
   tail = snake.shift();
   this.eraseSnakeSegment(tail.x, tail.y);
-  switch (this.direction) {
-    case 'up': 
-      snake.push(head = { x: x, y: y - 1 });
-      break;
-    case 'right': 
-      snake.push(head = { x: x + 1, y: y });
-      break;
-    case 'down': 
-      snake.push(head = { x: x, y: y + 1 });
-      break;
-    case 'left': 
-      snake.push(head = { x: x - 1, y: y });
-      break;
-  }
+  head = {
+    x: head.x + neighbor.x[direction],
+    y: head.y + neighbor.y[direction]
+  };
+  snake.push(head);
   this.paintCanvas();
-  x = head.x;
-  y = head.y;
 
   // Check for wall collision.
-  if (x < 0 || x >= this.numCols || y < 0 || y >= this.numRows) {
+  if (head.x < 0 || head.x >= this.numCols ||
+      head.y < 0 || head.y >= this.numRows) {
     this.stopGame('wall collision');
     return;
   }
@@ -212,7 +206,7 @@ Snake.gameStep = function () {
   }
 
   // If we ate a piece of food, reattach the tail and place new food.
-  if (x == food.x && y == food.y) {
+  if (head.x == food.x && head.y == food.y) {
     this.putSnakeSegment(tail.x, tail.y);
     snake.unshift(tail);
     this.setMessage(snake.length + ' segments');
