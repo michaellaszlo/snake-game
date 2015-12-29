@@ -89,11 +89,7 @@ Snake.startGame = function () {
     colCount[x] = 0;
   }
   for (i = snake.length - 1; i >= 0; --i) {
-    x = snake[i].x;
-    y = snake[i].y;
-    grid[y][x] = 'snake';
-    ++rowCount[y];
-    ++colCount[x];
+    this.putItem(snake[i].x, snake[i].y, 'snake');
   }
 
   this.food = {};
@@ -108,7 +104,6 @@ Snake.pauseGame = function () {
   if (this.paused) {
     this.paused = false;
     this.pauseGameButton.innerHTML = 'pause';
-    console.log(this.pauseGameButton);
     this.gameInterval = window.setInterval(this.gameStep.bind(this), 200);
   } else {
     this.paused = true;
@@ -117,24 +112,30 @@ Snake.pauseGame = function () {
   }
 };
 
-Snake.putSnakeSegment = function (x, y) {
+Snake.getItem = function (x, y) {
+  return this.grid[y][x];
+};
+
+Snake.putItem = function (x, y, item) {
   if (this.grid[y][x]) {
     return false;
   }
-  this.grid[y][x] = 'snake';
+  this.grid[y][x] = item;
   ++this.count.row[y];
   ++this.count.col[x];
   ++this.count.all;
-  console.log('count all:', this.count.all);
   return true;
 };
 
-Snake.eraseSnakeSegment = function (x, y) {
+Snake.wipeCell = function (x, y) {
+  if (!this.grid[y][x]) {
+    return false;
+  }
   this.grid[y][x] = null;
   --this.count.row[y];
   --this.count.col[x];
   --this.count.all;
-  console.log('count all:', this.count.all);
+  return true;
 };
 
 Snake.placeFood = function () {
@@ -154,9 +155,7 @@ Snake.placeFood = function () {
       }
     }
   }
-  ++this.count.row[food.y];
-  ++this.count.col[food.x];
-  ++this.count.all;
+  this.putItem(food.x, food.y, 'food');
 };
 
 Snake.paintCell = function (x, y, color) {
@@ -174,25 +173,25 @@ Snake.paintCanvas = function () {
   this.context.clearRect(0, 0,
       this.size.canvas.width, this.size.canvas.height);
   this.paintCell(this.food.x, this.food.y, this.color.food);
-  head = this.snake[this.snake.length - 1];
-  this.paintCell(head.x, head.y, this.color.snake.head);
   for (i = snake.length - 2; i >= 0; --i) {
     this.paintCell(snake[i].x, snake[i].y, this.color.snake.body);
   }
+  head = this.snake[this.snake.length - 1];
+  this.paintCell(head.x, head.y, this.color.snake.head);
 };
   
 Snake.gameStep = function () {
   var snake = this.snake,
       head = snake[snake.length - 1],
-      food = this.food,
       neighbor = this.neighbor,
       direction = this.direction,
       tail,
+      item,
       i;
 
-  // Move the snake.
+  // Chop off the tail and make a new head.
   tail = snake.shift();
-  this.eraseSnakeSegment(tail.x, tail.y);
+  this.wipeCell(tail.x, tail.y);
   head = {
     x: head.x + neighbor.x[direction],
     y: head.y + neighbor.y[direction]
@@ -208,18 +207,20 @@ Snake.gameStep = function () {
   }
 
   // Check for head colliding with body.
-  if (!this.putSnakeSegment(head.x, head.y)) {
+  item = this.getItem(head.x, head.y);
+  if (item == 'snake') {
     this.stopGame('self-collision');
     return;
   }
 
-  // If we ate a piece of food, reattach the tail and place new food.
-  if (head.x == food.x && head.y == food.y) {
-    --this.count.row[food.y];
-    --this.count.col[food.x];
-    --this.count.all;
-    this.putSnakeSegment(tail.x, tail.y);
+  // The cell is valid. It has food or is empty. We can write the head now.
+  this.wipeCell(head.x, head.y);
+  this.putItem(head.x, head.y, 'snake');
+
+  // If the head overwrote food, reattach the tail and place new food.
+  if (item == 'food') {
     snake.unshift(tail);
+    this.putItem(tail.x, tail.y, 'snake');
     this.setMessage(snake.length + ' segments');
     this.placeFood();
   }
