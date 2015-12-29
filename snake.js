@@ -79,7 +79,8 @@ Snake.startGame = function () {
   }
   this.count = {
     row: rowCount = new Array(numRows),
-    col: colCount = new Array(numCols)
+    col: colCount = new Array(numCols),
+    all: 0
   };
   for (y = 0; y < numRows; ++y) {
     rowCount[y] = 0;
@@ -123,6 +124,8 @@ Snake.putSnakeSegment = function (x, y) {
   this.grid[y][x] = 'snake';
   ++this.count.row[y];
   ++this.count.col[x];
+  ++this.count.all;
+  console.log('count all:', this.count.all);
   return true;
 };
 
@@ -130,10 +133,12 @@ Snake.eraseSnakeSegment = function (x, y) {
   this.grid[y][x] = null;
   --this.count.row[y];
   --this.count.col[x];
+  --this.count.all;
+  console.log('count all:', this.count.all);
 };
 
 Snake.placeFood = function () {
-  // Choose a random location that isn't occupied by the this.snake.
+  // Choose a random location that isn't occupied by the snake.
   var okay = false,
       snake = this.snake,
       food = this.food,
@@ -149,6 +154,9 @@ Snake.placeFood = function () {
       }
     }
   }
+  ++this.count.row[food.y];
+  ++this.count.col[food.x];
+  ++this.count.all;
 };
 
 Snake.paintCell = function (x, y, color) {
@@ -207,6 +215,9 @@ Snake.gameStep = function () {
 
   // If we ate a piece of food, reattach the tail and place new food.
   if (head.x == food.x && head.y == food.y) {
+    --this.count.row[food.y];
+    --this.count.col[food.x];
+    --this.count.all;
     this.putSnakeSegment(tail.x, tail.y);
     snake.unshift(tail);
     this.setMessage(snake.length + ' segments');
