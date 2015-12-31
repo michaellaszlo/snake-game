@@ -140,6 +140,12 @@ Snake.wipeCell = function (x, y) {
 
 Snake.placeFood = function () {
   // Choose a random location that isn't occupied by the snake.
+  var count = 0,
+      r = 0,
+      count = this.count,
+      all = count.all;
+  //while (count + count.row[r] < this.count
+  return;
   var okay = false,
       snake = this.snake,
       food = this.food,
@@ -213,7 +219,7 @@ Snake.gameStep = function () {
     return;
   }
 
-  // The cell is valid. It has food or is empty. We can write the head now.
+  // The cell is valid. It is empty or has food. Write the head regardless.
   this.wipeCell(head.x, head.y);
   this.putItem(head.x, head.y, 'snake');
 
