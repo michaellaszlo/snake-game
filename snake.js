@@ -1,4 +1,5 @@
 var Snake = {
+  hertz: 5,
   numRows: 10,
   numCols: 10,
   start: {
@@ -77,16 +78,16 @@ Snake.startGame = function () {
   for (y = 0; y < numRows; ++y) {
     grid[y] = new Array(numCols);
   }
-  this.count = {
+  this.free = {
     row: rowCount = new Array(numRows),
     col: colCount = new Array(numCols),
-    all: 0
+    all: numRows * numCols
   };
   for (y = 0; y < numRows; ++y) {
-    rowCount[y] = 0;
+    rowCount[y] = numCols;
   }
   for (x = 0; x < numCols; ++x) {
-    colCount[x] = 0;
+    colCount[x] = numRows;
   }
   for (i = snake.length - 1; i >= 0; --i) {
     this.putItem(snake[i].x, snake[i].y, 'snake');
@@ -97,14 +98,16 @@ Snake.startGame = function () {
   this.paintCanvas();
   this.setMessage('');
   this.pauseGameButton.style.display = 'inline';
-  this.gameInterval = window.setInterval(this.gameStep.bind(this), 200);
+  this.gameInterval = window.setInterval(this.gameStep.bind(this),
+      1000 / this.hertz);
 };
 
 Snake.pauseGame = function () {
   if (this.paused) {
     this.paused = false;
     this.pauseGameButton.innerHTML = 'pause';
-    this.gameInterval = window.setInterval(this.gameStep.bind(this), 200);
+    this.gameInterval = window.setInterval(this.gameStep.bind(this),
+        1000 / this.hertz);
   } else {
     this.paused = true;
     this.pauseGameButton.innerHTML = 'resume';
@@ -121,9 +124,9 @@ Snake.putItem = function (x, y, item) {
     return false;
   }
   this.grid[y][x] = item;
-  ++this.count.row[y];
-  ++this.count.col[x];
-  ++this.count.all;
+  --this.free.row[y];
+  --this.free.col[x];
+  --this.free.all;
   return true;
 };
 
@@ -132,35 +135,36 @@ Snake.wipeCell = function (x, y) {
     return false;
   }
   this.grid[y][x] = null;
-  --this.count.row[y];
-  --this.count.col[x];
-  --this.count.all;
+  ++this.free.row[y];
+  ++this.free.col[x];
+  ++this.free.all;
   return true;
 };
 
 Snake.placeFood = function () {
   // Choose a random location that isn't occupied by the snake.
-  var count = 0,
-      r = 0,
-      count = this.count,
-      all = count.all;
-  //while (count + count.row[r] < this.count
-  return;
-  var okay = false,
-      snake = this.snake,
-      food = this.food,
-      i;
-  while (!okay) {
-    food.x = Math.floor(Math.random() * this.numCols);
-    food.y = Math.floor(Math.random() * this.numRows);
-    okay = true;
-    for (i = 0; i < snake.length; ++i) {
-      if (snake[i].x == food.x && snake[i].y == food.y) {
-        okay = false;
+  var food = this.food,
+      grid = this.grid,
+      freeRow = this.free.row,
+      choice = Math.floor(Math.random() * this.free.all);
+      count = 0,
+      r = -1,
+      c = this.numCols;
+  while (count <= choice) {
+    ++r;
+    count += freeRow[r];
+  }
+  while (true) {
+    --c;
+    if (!grid[r][c]) {
+      --count;
+      if (count == choice) {
         break;
       }
     }
   }
+  food.x = c;
+  food.y = r;
   this.putItem(food.x, food.y, 'food');
 };
 
