@@ -77,6 +77,9 @@ Snake.startGame = function () {
   grid = this.grid = new Array(numRows);
   for (y = 0; y < numRows; ++y) {
     grid[y] = new Array(numCols);
+    for (x = 0; x < numCols; ++x) {
+      grid[y][x] = { kind: 'empty' };
+    }
   }
   this.free = {
     row: rowCount = new Array(numRows),
@@ -86,10 +89,11 @@ Snake.startGame = function () {
     rowCount[y] = numCols;
   }
   for (i = snake.length - 1; i >= 0; --i) {
-    this.putItem(snake[i].x, snake[i].y, 'snake');
+    this.putItem(snake[i].x, snake[i].y, { kind: 'snake' });
   }
 
-  this.food = {};
+  this.foodList = { count: 0, first: null };
+  this.placeFood();
   this.placeFood();
   this.paintCanvas();
   this.setMessage('');
@@ -116,7 +120,7 @@ Snake.getItem = function (x, y) {
 };
 
 Snake.putItem = function (x, y, item) {
-  if (this.grid[y][x]) {
+  if (this.grid[y][x].kind !== 'empty') {
     return false;
   }
   this.grid[y][x] = item;
@@ -126,10 +130,10 @@ Snake.putItem = function (x, y, item) {
 };
 
 Snake.wipeCell = function (x, y) {
-  if (!this.grid[y][x]) {
+  if (this.grid[y][x].kind === 'empty') {
     return false;
   }
-  this.grid[y][x] = null;
+  this.grid[y][x] = { kind: 'empty' };
   ++this.free.row[y];
   ++this.free.all;
   return true;
@@ -137,29 +141,53 @@ Snake.wipeCell = function (x, y) {
 
 Snake.placeFood = function () {
   // Choose a random location that isn't occupied by the snake.
-  var food = this.food,
+  var foodNode,
       grid = this.grid,
       freeRow = this.free.row,
       choice = Math.floor(Math.random() * this.free.all);
       count = 0,
-      r = -1,
-      c = this.numCols;
+      y = -1,
+      x = this.numCols;
   while (count <= choice) {
-    ++r;
-    count += freeRow[r];
+    ++y;
+    count += freeRow[y];
   }
   while (true) {
-    --c;
-    if (!grid[r][c]) {
+    --x;
+    if (grid[y][x].kind === 'empty') {
       --count;
       if (count == choice) {
         break;
       }
     }
   }
-  food.x = c;
-  food.y = r;
-  this.putItem(food.x, food.y, 'food');
+  foodNode = this.addToFoodList(x, y);
+  this.putItem(x, y, { kind: 'food', node: foodNode });
+};
+
+Snake.addToFoodList = function (x, y) {
+  var foodList = this.foodList,
+      first = foodList.first,
+      foodNode = { x: x, y: y, previous: null, next: first };
+  if (first !== null) {
+    first.previous = foodNode;
+  }
+  foodList.first = foodNode;
+  foodList.count += 1;
+  return foodNode;
+};
+
+Snake.deleteFromFoodList = function (foodNode) {
+  var foodList = this.foodList;
+  if (foodNode.previous === null) {
+    foodList.first = foodNode.next;
+  } else {
+    foodNode.previous.next = foodNode.next;
+  }
+  if (foodNode.next !== null) {
+    foodNode.next.previous = foodNode.previous;
+  }
+  foodList.count -= 1;
 };
 
 Snake.paintCell = function (x, y, color) {
@@ -171,17 +199,24 @@ Snake.paintCell = function (x, y, color) {
 };
 
 Snake.paintCanvas = function () {
-  var head,
+  var color = this.color,
+      foodNode = this.foodList.first,
+      head,
       snake = this.snake,
       i;
   this.context.clearRect(0, 0,
       this.size.canvas.width, this.size.canvas.height);
-  this.paintCell(this.food.x, this.food.y, this.color.food);
-  for (i = snake.length - 2; i >= 0; --i) {
-    this.paintCell(snake[i].x, snake[i].y, this.color.snake.body);
+  console.log(this.foodList.count, 'food items');
+  while (foodNode !== null) {
+    console.log(foodNode.y, foodNode.x);
+    this.paintCell(foodNode.x, foodNode.y, color.food);
+    foodNode = foodNode.next;
   }
-  head = this.snake[this.snake.length - 1];
-  this.paintCell(head.x, head.y, this.color.snake.head);
+  for (i = snake.length - 2; i >= 0; --i) {
+    this.paintCell(snake[i].x, snake[i].y, color.snake.body);
+  }
+  head = snake[snake.length - 1];
+  this.paintCell(head.x, head.y, color.snake.head);
 };
   
 Snake.gameStep = function () {
@@ -212,7 +247,7 @@ Snake.gameStep = function () {
 
   // Check for head colliding with body.
   item = this.getItem(head.x, head.y);
-  if (item == 'snake') {
+  if (item.kind === 'snake') {
     this.stopGame('self-collision');
     this.paintCanvas();
     return;
@@ -220,13 +255,14 @@ Snake.gameStep = function () {
 
   // The cell is valid. It is empty or has food. Write the head regardless.
   this.wipeCell(head.x, head.y);
-  this.putItem(head.x, head.y, 'snake');
+  this.putItem(head.x, head.y, { kind: 'snake' });
 
-  // If the head overwrote food, reattach the tail and place new food.
-  if (item == 'food') {
+  // If the cell contained food, reattach the tail and place new food.
+  if (item.kind === 'food') {
     snake.unshift(tail);
-    this.putItem(tail.x, tail.y, 'snake');
+    this.putItem(tail.x, tail.y, { kind: 'snake' });
     this.setMessage(snake.length + ' segments');
+    this.deleteFromFoodList(item.node);
     this.placeFood();
   }
   this.paintCanvas();

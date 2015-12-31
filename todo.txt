@@ -1,20 +1,24 @@
 
 improve food placement
 + place food in O(n + m) with one random call
-- immediately place new food when current food is eaten
-- allow more than one food item to be placed
++ immediately place new food when current food is eaten
++ allow more than one food item to be placed
+
+fix backward collision
+- ignore backward movement?
+- check for special case and reposition head?
 
 module pattern
-
-place obstacles
 
 sharp tail and round head
 
 directional segments
 
-smooth motion
-
 thick walls
+
+place obstacles
+
+smooth motion
 
 keep high score
 
