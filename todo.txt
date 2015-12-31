@@ -1,0 +1,22 @@
+
+improve food placement
++ place food in O(n + m) with one random call
+- immediately place new food when current food is eaten
+- allow more than one food item to be placed
+
+module pattern
+
+place obstacles
+
+sharp tail and round head
+
+directional segments
+
+smooth motion
+
+thick walls
+
+keep high score
+
+better score graphics
+

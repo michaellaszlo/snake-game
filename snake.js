@@ -80,14 +80,10 @@ Snake.startGame = function () {
   }
   this.free = {
     row: rowCount = new Array(numRows),
-    col: colCount = new Array(numCols),
     all: numRows * numCols
   };
   for (y = 0; y < numRows; ++y) {
     rowCount[y] = numCols;
-  }
-  for (x = 0; x < numCols; ++x) {
-    colCount[x] = numRows;
   }
   for (i = snake.length - 1; i >= 0; --i) {
     this.putItem(snake[i].x, snake[i].y, 'snake');
@@ -125,7 +121,6 @@ Snake.putItem = function (x, y, item) {
   }
   this.grid[y][x] = item;
   --this.free.row[y];
-  --this.free.col[x];
   --this.free.all;
   return true;
 };
@@ -136,7 +131,6 @@ Snake.wipeCell = function (x, y) {
   }
   this.grid[y][x] = null;
   ++this.free.row[y];
-  ++this.free.col[x];
   ++this.free.all;
   return true;
 };
@@ -207,12 +201,12 @@ Snake.gameStep = function () {
     y: head.y + neighbor.y[direction]
   };
   snake.push(head);
-  this.paintCanvas();
 
   // Check for wall collision.
   if (head.x < 0 || head.x >= this.numCols ||
       head.y < 0 || head.y >= this.numRows) {
     this.stopGame('wall collision');
+    this.paintCanvas();
     return;
   }
 
@@ -220,6 +214,7 @@ Snake.gameStep = function () {
   item = this.getItem(head.x, head.y);
   if (item == 'snake') {
     this.stopGame('self-collision');
+    this.paintCanvas();
     return;
   }
 
@@ -234,6 +229,7 @@ Snake.gameStep = function () {
     this.setMessage(snake.length + ' segments');
     this.placeFood();
   }
+  this.paintCanvas();
 };
 
 Snake.stopGame = function (message) {
