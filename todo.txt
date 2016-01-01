@@ -5,8 +5,8 @@ improve food placement
 + allow more than one food item to be placed
 
 fix backward collision
-- ignore backward movement?
-- check for special case and reposition head?
++ head stands still
+- ignore backward movement
 
 module pattern
 

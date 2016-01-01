@@ -15,6 +15,9 @@ var Snake = {
     food: '#a2302a',
     snake: { body: '#2255a2', head: '#0f266b' }
   },
+  opposite: {
+    north: 'south', south: 'north', east: 'west', west: 'east'
+  },
   neighbor: {
     x: { north: 0, east: 1, south: 0, west: -1 },
     y: { north: -1, east: 0, south: 1, west: 0 }
@@ -67,7 +70,7 @@ Snake.startGame = function () {
       numCols = this.numCols,
       i, x, y;
   this.startGameButton.disabled = true;
-  this.direction = this.start.direction;
+  this.direction = this.previousDirection = this.start.direction;
   snake = this.snake = new Array(this.start.length);
   snake[snake.length - 1] = { x: this.start.x, y: this.start.y };
   for (i = snake.length - 2; i >= 0; --i) {
@@ -206,9 +209,7 @@ Snake.paintCanvas = function () {
       i;
   this.context.clearRect(0, 0,
       this.size.canvas.width, this.size.canvas.height);
-  console.log(this.foodList.count, 'food items');
   while (foodNode !== null) {
-    console.log(foodNode.y, foodNode.x);
     this.paintCell(foodNode.x, foodNode.y, color.food);
     foodNode = foodNode.next;
   }
@@ -231,10 +232,13 @@ Snake.gameStep = function () {
   // Chop off the tail and make a new head.
   tail = snake.shift();
   this.wipeCell(tail.x, tail.y);
-  head = {
-    x: head.x + neighbor.x[direction],
-    y: head.y + neighbor.y[direction]
-  };
+  if (direction != this.opposite[this.previousDirection]) {
+    head = {
+      x: head.x + neighbor.x[direction],
+      y: head.y + neighbor.y[direction]
+    };
+  }
+  this.previousDirection = direction;
   snake.push(head);
 
   // Check for wall collision.
