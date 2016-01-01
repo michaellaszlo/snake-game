@@ -6,7 +6,7 @@ improve food placement
 
 fix backward collision
 + head stands still
-- ignore backward movement
++ ignore backward movement
 
 module pattern
 
@@ -17,6 +17,8 @@ directional segments
 thick walls
 
 place obstacles
+
+movement queue
 
 smooth motion
 

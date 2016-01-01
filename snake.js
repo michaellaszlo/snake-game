@@ -232,12 +232,10 @@ Snake.gameStep = function () {
   // Chop off the tail and make a new head.
   tail = snake.shift();
   this.wipeCell(tail.x, tail.y);
-  if (direction != this.opposite[this.previousDirection]) {
-    head = {
-      x: head.x + neighbor.x[direction],
-      y: head.y + neighbor.y[direction]
-    };
-  }
+  head = {
+    x: head.x + neighbor.x[direction],
+    y: head.y + neighbor.y[direction]
+  };
   this.previousDirection = direction;
   snake.push(head);
 
@@ -281,9 +279,14 @@ Snake.stopGame = function (message) {
 };
 
 Snake.keyDownHandler = function (event) {
-  var keyCode = event.keyCode;
+  var keyCode = event.keyCode,
+      direction;
   if (keyCode in this.keyCodeToDir) {
-    this.direction = this.keyCodeToDir[keyCode];
+    direction = this.keyCodeToDir[keyCode];
+    if (direction == this.opposite[this.previousDirection]) {
+      return;
+    }
+    this.direction = direction;
   }
 };
 
