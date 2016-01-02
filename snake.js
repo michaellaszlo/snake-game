@@ -138,6 +138,13 @@ var Snake = (function () {
         cellSize - gapSize, cellSize - gapSize);
   }
 
+  function transformToCell(x, y, direction) {
+    var s = size.cell;
+    context.translate(x * s + s / 2, y * s + s / 2);
+    context.rotate(rotation[direction]);
+    context.translate(-s / 2, -s / 2);
+  }
+
   function paintCanvas() {
     var foodNode = foodList.first,
         s = size.cell,
@@ -155,10 +162,8 @@ var Snake = (function () {
 
     // Head.
     head = snake[snake.length - 1];
-    //paintCell(head.x, head.y, color.snake.head);
-    context.translate(head.x * s + s / 2, head.y * s + s / 2);
-    context.rotate(rotation[direction]);
-    context.translate(-s / 2, -s / 2);
+    context.save();
+    transformToCell(head.x, head.y, direction);
     context.beginPath();
     context.moveTo(s / 8, s);
     context.lineTo(0, 2 * s / 3);
@@ -169,9 +174,7 @@ var Snake = (function () {
     context.closePath();
     context.fillStyle = color.snake.head;
     context.fill();
-    context.translate(s / 2, s / 2);
-    context.rotate(-rotation[direction]);
-    context.translate(-head.x * s - s / 2, -head.y * s - s / 2);
+    context.restore();
   }
     
   function gameStep() {
