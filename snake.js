@@ -18,6 +18,9 @@ var Snake = (function () {
       opposite = {
         north: 'south', south: 'north', east: 'west', west: 'east'
       },
+      rotation = {
+        north: 0, east: Math.PI / 2, south: Math.PI, west: 3 * Math.PI / 2
+      },
       neighbor = {
         x: { north: 0, east: 1, south: 0, west: -1 },
         y: { north: -1, east: 0, south: 1, west: 0 }
@@ -137,6 +140,7 @@ var Snake = (function () {
 
   function paintCanvas() {
     var foodNode = foodList.first,
+        s = size.cell,
         head,
         i;
     context.clearRect(0, 0,
@@ -148,8 +152,26 @@ var Snake = (function () {
     for (i = snake.length - 2; i >= 0; --i) {
       paintCell(snake[i].x, snake[i].y, color.snake.body);
     }
+
+    // Head.
     head = snake[snake.length - 1];
-    paintCell(head.x, head.y, color.snake.head);
+    //paintCell(head.x, head.y, color.snake.head);
+    context.translate(head.x * s + s / 2, head.y * s + s / 2);
+    context.rotate(rotation[direction]);
+    context.translate(-s / 2, -s / 2);
+    context.beginPath();
+    context.moveTo(s / 8, s);
+    context.lineTo(0, 2 * s / 3);
+    context.lineTo(s / 3, 0);
+    context.lineTo(2 * s / 3, 0);
+    context.lineTo(s, 2 * s / 3);
+    context.lineTo(7 * s / 8, s);
+    context.closePath();
+    context.fillStyle = color.snake.head;
+    context.fill();
+    context.translate(s / 2, s / 2);
+    context.rotate(-rotation[direction]);
+    context.translate(-head.x * s - s / 2, -head.y * s - s / 2);
   }
     
   function gameStep() {

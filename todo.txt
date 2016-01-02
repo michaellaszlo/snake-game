@@ -1,7 +1,7 @@
-
-sharp tail and round head
-
-directional segments
+improve snake graphics
++ head
+- tail
+- segments
 
 thick walls
 
