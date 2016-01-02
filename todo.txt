@@ -1,7 +1,7 @@
 improve snake graphics
 + head
-- tail
-- segments
++ tail
++ segments
 
 thick walls
 

@@ -15,11 +15,18 @@ var Snake = (function () {
         food: '#a2302a',
         snake: { body: '#2255a2', head: '#0f266b' }
       },
+      pi = Math.PI,
+      rotation = {
+        north: 0, east: pi / 2, south: pi, west: 3 * pi / 2
+      },
       opposite = {
         north: 'south', south: 'north', east: 'west', west: 'east'
       },
-      rotation = {
-        north: 0, east: Math.PI / 2, south: Math.PI, west: 3 * Math.PI / 2
+      clockwise = {
+        north: 'east', east: 'south', south: 'west', west: 'north'
+      },
+      counterclockwise = {
+        north: 'west', east: 'north', south: 'east', west: 'south'
       },
       neighbor = {
         x: { north: 0, east: 1, south: 0, west: -1 },
@@ -161,30 +168,24 @@ var Snake = (function () {
   function paintCanvas() {
     var foodNode = foodList.first,
         s = size.cell,
-        d,
-        head,
-        tail,
-        pretail,
+        c, d,
+        here, behind, ahead,
         i;
     context.clearRect(0, 0,
         size.canvas.width, size.canvas.height);
-
-    context.fillStyle = color.snake.body;
 
     while (foodNode !== null) {
       paintCell(foodNode.x, foodNode.y, color.food);
       foodNode = foodNode.next;
     }
-    for (i = snake.length - 2; i >= 1; --i) {
-      paintCell(snake[i].x, snake[i].y, color.snake.body);
-    }
 
     // Tail.
-    tail = snake[0];
-    pretail = snake[1];
-    d = calculateDirection(tail.x, tail.y, pretail.x, pretail.y);
+    context.fillStyle = color.snake.body;
+    here = snake[0];
+    ahead = snake[1];
+    d = calculateDirection(here.x, here.y, ahead.x, ahead.y);
     context.save();
-    transformToCell(tail.x, tail.y, d);
+    transformToCell(here.x, here.y, d);
     context.beginPath();
     context.moveTo(s / 8, 0);
     context.lineTo(7 * s / 16, s);
@@ -194,10 +195,43 @@ var Snake = (function () {
     context.fill();
     context.restore();
 
+    // Between tail and head.
+    for (i = 1; i < snake.length - 1; ++i) {
+      behind = snake[i - 1];
+      here = snake[i];
+      ahead = snake[i + 1];
+      c = calculateDirection(behind.x, behind.y, here.x, here.y);
+      d = calculateDirection(here.x, here.y, ahead.x, ahead.y);
+      context.save();
+      transformToCell(here.x, here.y, c);
+      context.beginPath();
+      context.moveTo(s / 8, s);
+      if (d == c) {
+        context.lineTo(s / 8, 0);
+        context.lineTo(7 * s / 8, 0);
+        context.lineTo(7 * s / 8, s);
+      } else if (d == clockwise[c]) {
+        context.lineTo(s / 8, 3 * s / 8);
+        context.arc(3 * s / 8, 3 * s / 8, s / 4, pi, 3 * pi / 2);
+        context.lineTo(s, s / 8);
+        context.lineTo(s, 7 * s / 8);
+        context.arc(s, s, s / 8, 3 * pi / 2, pi, true);
+      } else {
+        context.arc(0, s, s / 8, 0, 3 * pi / 2, true);
+        context.lineTo(0, s / 8);
+        context.lineTo(5 * s / 8, s / 8);
+        context.arc(5 * s / 8, 3 * s / 8, s / 4, 3 * pi / 2, 0);
+        context.lineTo(7 * s / 8, s);
+      }
+      context.closePath();
+      context.fill();
+      context.restore();
+    }
+
     // Head.
-    head = snake[snake.length - 1];
+    here = snake[snake.length - 1];
     context.save();
-    transformToCell(head.x, head.y, direction);
+    transformToCell(here.x, here.y, direction);
     context.beginPath();
     context.moveTo(s / 8, s);
     context.lineTo(0, 2 * s / 3);
