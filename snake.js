@@ -145,20 +145,54 @@ var Snake = (function () {
     context.translate(-s / 2, -s / 2);
   }
 
+  function calculateDirection(x0, y0, x1, y1) {
+    if (x0 == x1) {
+      if (y1 < y0) {
+        return 'north';
+      }
+      return 'south';
+    }
+    if (x1 > x0) {
+      return 'east';
+    }
+    return 'west';
+  }
+
   function paintCanvas() {
     var foodNode = foodList.first,
         s = size.cell,
+        d,
         head,
+        tail,
+        pretail,
         i;
     context.clearRect(0, 0,
         size.canvas.width, size.canvas.height);
+
+    context.fillStyle = color.snake.body;
+
     while (foodNode !== null) {
       paintCell(foodNode.x, foodNode.y, color.food);
       foodNode = foodNode.next;
     }
-    for (i = snake.length - 2; i >= 0; --i) {
+    for (i = snake.length - 2; i >= 1; --i) {
       paintCell(snake[i].x, snake[i].y, color.snake.body);
     }
+
+    // Tail.
+    tail = snake[0];
+    pretail = snake[1];
+    d = calculateDirection(tail.x, tail.y, pretail.x, pretail.y);
+    context.save();
+    transformToCell(tail.x, tail.y, d);
+    context.beginPath();
+    context.moveTo(s / 8, 0);
+    context.lineTo(7 * s / 16, s);
+    context.lineTo(9 * s / 16, s);
+    context.lineTo(7 * s / 8, 0);
+    context.closePath();
+    context.fill();
+    context.restore();
 
     // Head.
     head = snake[snake.length - 1];
