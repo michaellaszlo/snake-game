@@ -11,9 +11,12 @@ var Snake = (function () {
         cell: 18,
         wall: 8
       },
+      shape = {
+        food: 7
+      },
       color = {
-        wall: '#ccc',
-        food: '#a2302a',
+        wall: '#d6d4c6',
+        food: '#549a53',
         snake: { body: '#2255a2', head: '#0f266b' }
       },
       pi = Math.PI,
@@ -94,10 +97,16 @@ var Snake = (function () {
     // Choose a random location that isn't occupied by the snake.
     var foodNode,
         freeRow = free.row,
-        choice = Math.floor(Math.random() * free.all);
+        choice = Math.floor(Math.random() * free.all),
         count = 0,
         y = -1,
-        x = numCols;
+        x = numCols,
+        polygon,
+        n = shape.food,
+        r = size.cell / 2,
+        angle0,
+        angle,
+        i;
     while (count <= choice) {
       ++y;
       count += freeRow[y];
@@ -112,6 +121,15 @@ var Snake = (function () {
       }
     }
     foodNode = addToFoodList(x, y);
+    foodNode.polygon = polygon = new Array(n);
+    angle0 = Math.random() * 2 * Math.PI;
+    for (i = 0; i < n; ++i) {
+      angle = angle0 + i * 2 * Math.PI / n;
+      polygon[i] = {
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r
+      };
+    }
     putItem(x, y, { kind: 'food', node: foodNode });
   }
 
@@ -138,11 +156,19 @@ var Snake = (function () {
     foodList.count -= 1;
   }
 
-  function paintFood(x, y) {
-    var s = size.cell,
-        w = size.wall;
-    context.fillStyle = color.food;
-    context.fillRect(w + x * s, w + y * s, s, s);
+  function paintPolygon(x, y, polygon, color) {
+    var w = size.wall,
+        s = size.cell,
+        x0 = w + x * s + s / 2,
+        y0 = w + y * s + s / 2;
+    context.fillStyle = color;
+    context.beginPath();
+    context.moveTo(x0 + polygon[0].x, y0 + polygon[0].y);
+    for (i = 1; i < polygon.length; ++i) {
+      context.lineTo(x0 + polygon[i].x, y0 + polygon[i].y);
+    }
+    context.closePath();
+    context.fill();
   }
 
   function transformToCell(x, y, direction) {
@@ -179,7 +205,7 @@ var Snake = (function () {
     context.clearRect(w, w, numCols * s, numRows * s);
 
     while (foodNode !== null) {
-      paintFood(foodNode.x, foodNode.y);
+      paintPolygon(foodNode.x, foodNode.y, foodNode.polygon, color.food);
       foodNode = foodNode.next;
     }
 
