@@ -1,13 +1,9 @@
-improve snake graphics
-+ head
-+ tail
-+ segments
 
-thick walls
-
-place obstacles
+better food graphics
 
 movement queue
+
+obstacles
 
 smooth motion
 

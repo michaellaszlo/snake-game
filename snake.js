@@ -9,9 +9,10 @@ var Snake = (function () {
       },
       size = {
         cell: 18,
-        gap: 1
+        wall: 8
       },
       color = {
+        wall: '#ccc',
         food: '#a2302a',
         snake: { body: '#2255a2', head: '#0f266b' }
       },
@@ -137,17 +138,17 @@ var Snake = (function () {
     foodList.count -= 1;
   }
 
-  function paintCell(x, y, color) {
-    var cellSize = size.cell,
-        gapSize = size.gap;
-    context.fillStyle = color;
-    context.fillRect(x * cellSize + gapSize, y * cellSize + gapSize,
-        cellSize - gapSize, cellSize - gapSize);
+  function paintFood(x, y) {
+    var s = size.cell,
+        w = size.wall;
+    context.fillStyle = color.food;
+    context.fillRect(w + x * s, w + y * s, s, s);
   }
 
   function transformToCell(x, y, direction) {
-    var s = size.cell;
-    context.translate(x * s + s / 2, y * s + s / 2);
+    var s = size.cell,
+        w = size.wall;
+    context.translate(w + x * s + s / 2, w + y * s + s / 2);
     context.rotate(rotation[direction]);
     context.translate(-s / 2, -s / 2);
   }
@@ -168,14 +169,17 @@ var Snake = (function () {
   function paintCanvas() {
     var foodNode = foodList.first,
         s = size.cell,
+        w = size.wall,
         c, d,
         here, behind, ahead,
         i;
-    context.clearRect(0, 0,
-        size.canvas.width, size.canvas.height);
+
+    context.fillStyle = color.wall;
+    context.fillRect(0, 0, size.canvas.width, size.canvas.height);
+    context.clearRect(w, w, numCols * s, numRows * s);
 
     while (foodNode !== null) {
-      paintCell(foodNode.x, foodNode.y, color.food);
+      paintFood(foodNode.x, foodNode.y);
       foodNode = foodNode.next;
     }
 
@@ -322,8 +326,8 @@ var Snake = (function () {
     canvas = document.getElementById('gameCanvas');
     context = canvas.getContext('2d');
     size.canvas = {
-      width: numCols * size.cell,
-      height: numRows * size.cell
+      width: numCols * size.cell + 2 * size.wall,
+      height: numRows * size.cell + 2 * size.wall
     };
     canvas.width = size.canvas.width;
     canvas.height = size.canvas.height;
