@@ -16,7 +16,7 @@ var Snake = (function () {
       },
       color = {
         wall: '#d6d4c6',
-        food: '#549a53',
+        food: '#559d34',
         snake: { body: '#2255a2', head: '#0f266b' }
       },
       pi = Math.PI,
@@ -104,9 +104,9 @@ var Snake = (function () {
         polygon,
         n = shape.food,
         r = size.cell / 2,
-        angle0,
-        angle,
-        i;
+        dr = r / 8, d,
+        angle0, angle,
+        i, px, py;
     while (count <= choice) {
       ++y;
       count += freeRow[y];
@@ -124,10 +124,16 @@ var Snake = (function () {
     foodNode.polygon = polygon = new Array(n);
     angle0 = Math.random() * 2 * Math.PI;
     for (i = 0; i < n; ++i) {
+      // Regular placement.
       angle = angle0 + i * 2 * Math.PI / n;
+      px = Math.cos(angle) * (r - dr);
+      py = Math.sin(angle) * (r - dr);
+      // Random variation.
+      angle = Math.random() * 2 * Math.PI;
+      d = Math.max(Math.random(), Math.random()) * dr;
       polygon[i] = {
-        x: Math.cos(angle) * r,
-        y: Math.sin(angle) * r
+        x: px + Math.cos(angle) * d,
+        y: py + Math.sin(angle) * d
       };
     }
     putItem(x, y, { kind: 'food', node: foodNode });

@@ -1,6 +1,4 @@
 
-better food graphics
-
 movement queue
 
 obstacles
