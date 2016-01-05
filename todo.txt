@@ -1,7 +1,7 @@
 
 smooth motion
 + move head smoothly
-- translate cell center to simplify rotations
++ translate cell center to simplify rotations
 - move tail smoothly
 - draw a curve at every corner
 
