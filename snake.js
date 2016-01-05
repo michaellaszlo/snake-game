@@ -293,26 +293,14 @@ var Snake = (function () {
     d = calculateDirection(neck.x, neck.y, head.x, head.y);
     context.save();
     transformToCell(neck.x, neck.y, c);
-    /*
     if (d == clockwise[c]) {
+      context.translate(s / 2, s / 2);
       context.rotate(tickRatio * pi / 2);
+      context.translate(-s / 2, -s / 2);
     } else if (d == counterclockwise[c]) {
+      context.translate(-s / 2, s / 2);
       context.rotate(tickRatio * -pi / 2);
-    }
-    context.translate(0, -tickRatio * size.cell);
-    */
-    if (d == clockwise[c]) {
-      context.translate(s / 2 - Math.cos(tickRatio * pi / 2) * s / 2,
-                        -Math.sin(tickRatio * pi / 2) * s / 2);
-      context.translate(0, s / 2);
-      context.rotate(tickRatio * pi / 2);
-      context.translate(0, -s / 2);
-    } else if (d == counterclockwise[c]) {
-      context.translate(Math.cos(tickRatio * pi / 2) * s / 2 - s / 2,
-                        -Math.sin(tickRatio * pi / 2) * s / 2);
-      context.translate(0, s / 2);
-      context.rotate(tickRatio * -pi / 2);
-      context.translate(0, -s / 2);
+      context.translate(s / 2, -s / 2);
     } else {
       context.translate(0, -tickRatio * size.cell);
     }
