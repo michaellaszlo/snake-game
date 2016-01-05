@@ -35,7 +35,7 @@ var Snake = (function () {
       counterclockwise = {
         north: 'west', east: 'north', south: 'east', west: 'south'
       },
-      neighbor = {
+      displace = {
         x: { north: 0, east: 1, south: 0, west: -1 },
         y: { north: -1, east: 0, south: 1, west: 0 }
       },
@@ -54,6 +54,7 @@ var Snake = (function () {
       direction,
       previousDirection,
       snake,
+      previousTail,
       grid,
       free,
       foodList,
@@ -206,7 +207,7 @@ var Snake = (function () {
         w = size.wall,
         c, d,
         here, behind, ahead,
-        head, neck,
+        head, neck, tail,
         i;
 
     context.fillStyle = color.wall;
@@ -219,12 +220,29 @@ var Snake = (function () {
     }
 
     // Tail.
-    context.fillStyle = color.snake.body;
-    here = snake[0];
+    behind = previousTail;
+    tail = snake[0];
     ahead = snake[1];
-    d = calculateDirection(here.x, here.y, ahead.x, ahead.y);
+    context.fillStyle = color.snake.body;
     context.save();
-    transformToCell(here.x, here.y, d);
+    c = calculateDirection(behind.x, behind.y, tail.x, tail.y);
+    d = calculateDirection(tail.x, tail.y, ahead.x, ahead.y);
+    if (behind == tail) {
+      transformToCell(behind.x, behind.y, d);
+    } else {
+      transformToCell(behind.x, behind.y, c);
+      if (d == clockwise[c]) {
+        context.translate(s / 2, -s / 2);
+        context.rotate(tickRatio * pi / 2);
+        context.translate(-s / 2, s / 2);
+      } else if (d == counterclockwise[c]) {
+        context.translate(-s / 2, -s / 2);
+        context.rotate(tickRatio * -pi / 2);
+        context.translate(s / 2, s / 2);
+      } else {
+        context.translate(0, -tickRatio * size.cell);
+      }
+    }
     context.beginPath();
     context.moveTo(-3 * s / 8, -s / 2);
     context.lineTo(-s / 16, s / 2);
@@ -275,6 +293,14 @@ var Snake = (function () {
     d = calculateDirection(neck.x, neck.y, head.x, head.y);
     context.save();
     transformToCell(neck.x, neck.y, c);
+    /*
+    if (d == clockwise[c]) {
+      context.rotate(tickRatio * pi / 2);
+    } else if (d == counterclockwise[c]) {
+      context.rotate(tickRatio * -pi / 2);
+    }
+    context.translate(0, -tickRatio * size.cell);
+    */
     if (d == clockwise[c]) {
       context.translate(s / 2 - Math.cos(tickRatio * pi / 2) * s / 2,
                         -Math.sin(tickRatio * pi / 2) * s / 2);
@@ -312,10 +338,14 @@ var Snake = (function () {
   }
     
   function gameStep() {
+    var tick,
+        head, tail,
+        item, i;
+
     if (!running) {
       return;
     }
-    var tick = Date.now() - tickStart;
+    tick = Date.now() - tickStart;
     if (tick < tickSpan) {
       paintCanvas(tick / tickSpan);
       window.requestAnimationFrame(gameStep);
@@ -323,17 +353,13 @@ var Snake = (function () {
     }
     tickStart = Date.now();
 
-    var head = snake[snake.length - 1],
-        tail,
-        item,
-        i;
-
     // Chop off the tail and make a new head.
-    tail = snake.shift();
+    previousTail = tail = snake.shift();
     wipeCell(tail.x, tail.y);
+    head = snake[snake.length - 1];
     head = {
-      x: head.x + neighbor.x[direction],
-      y: head.y + neighbor.y[direction]
+      x: head.x + displace.x[direction],
+      y: head.y + displace.y[direction]
     };
     previousDirection = direction;
     snake.push(head);
@@ -431,8 +457,8 @@ var Snake = (function () {
     direction = previousDirection = start.direction;
     snake = new Array(start.length);
     snake[snake.length - 1] = {
-      x: start.x + neighbor.x[direction],
-      y: start.y + neighbor.y[direction]
+      x: start.x + displace.x[direction],
+      y: start.y + displace.y[direction]
     };
     snake[snake.length - 2] = {
       x: start.x,
@@ -441,6 +467,7 @@ var Snake = (function () {
     for (i = snake.length - 3; i >= 0; --i) {
       snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
     }
+    previousTail = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
 
     grid = new Array(numRows);
     for (y = 0; y < numRows; ++y) {
