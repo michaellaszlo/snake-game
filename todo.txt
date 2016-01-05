@@ -1,11 +1,11 @@
 
-movement queue
+smooth motion
 
 obstacles
 
-smooth motion
+movement queue
 
-keep high score
+better progress graphics
 
-better score graphics
+levels
 

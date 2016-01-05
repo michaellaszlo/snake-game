@@ -1,5 +1,8 @@
 var Snake = (function () {
   var hertz = 5,
+      tickSpan = 1000 / hertz,
+      tickStart,
+      tickPause,
       numRows = 10,
       numCols = 10,
       start = {
@@ -54,18 +57,18 @@ var Snake = (function () {
       grid,
       free,
       foodList,
-      paused,
-      gameInterval;
+      running;
 
   function pauseGame() {
-    if (paused) {
-      paused = false;
-      pauseGameButton.innerHTML = 'pause';
-      gameInterval = window.setInterval(gameStep.bind(this), 1000 / hertz);
-    } else {
-      paused = true;
+    if (running) {
+      running = false;
+      tickPause = Date.now() - tickStart;
       pauseGameButton.innerHTML = 'resume';
-      window.clearInterval(gameInterval);
+    } else {
+      running = true;
+      pauseGameButton.innerHTML = 'pause';
+      tickStart = Date.now() - tickPause;
+      gameStep();
     }
   }
 
@@ -282,6 +285,16 @@ var Snake = (function () {
   }
     
   function gameStep() {
+    if (!running) {
+      return;
+    }
+    var tick = Date.now() - tickStart;
+    if (tick < tickSpan) {
+      window.requestAnimationFrame(gameStep);
+      return;
+    }
+    tickStart = Date.now();
+
     var head = snake[snake.length - 1],
         tail,
         item,
@@ -326,11 +339,11 @@ var Snake = (function () {
       placeFood();
     }
     paintCanvas();
+    window.requestAnimationFrame(gameStep);
   }
 
   function stopGame(message) {
     setMessage(message + '<br> ended with ' + snake.length + ' segments');
-    window.clearInterval(gameInterval);
     startGameButton.disabled = false;
     pauseGameButton.style.display = 'none';
   }
@@ -419,7 +432,9 @@ var Snake = (function () {
     paintCanvas();
     setMessage('');
     pauseGameButton.style.display = 'inline';
-    gameInterval = window.setInterval(gameStep.bind(this), 1000 / hertz);
+    tickStart = Date.now() - tickSpan;
+    running = true;
+    gameStep();
   }
 
   return {
