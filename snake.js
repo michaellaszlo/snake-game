@@ -201,12 +201,13 @@ var Snake = (function () {
     return 'west';
   }
 
-  function paintCanvas() {
+  function paintCanvas(tickRatio) {
     var foodNode = foodList.first,
         s = size.cell,
         w = size.wall,
         c, d,
         here, behind, ahead,
+        head, neck,
         i;
 
     context.fillStyle = color.wall;
@@ -235,7 +236,7 @@ var Snake = (function () {
     context.restore();
 
     // Between tail and head.
-    for (i = 1; i < snake.length - 1; ++i) {
+    for (i = 1; i < snake.length - 2; ++i) {
       behind = snake[i - 1];
       here = snake[i];
       ahead = snake[i + 1];
@@ -268,9 +269,28 @@ var Snake = (function () {
     }
 
     // Head.
-    here = snake[snake.length - 1];
+    head = snake[snake.length - 1];
+    neck = snake[snake.length - 2];
+    behind = snake[snake.length - 3];
+    c = calculateDirection(behind.x, behind.y, neck.x, neck.y);
+    d = calculateDirection(neck.x, neck.y, head.x, head.y);
     context.save();
-    transformToCell(here.x, here.y, direction);
+    transformToCell(neck.x, neck.y, c);
+    if (d == clockwise[c]) {
+      context.translate(s / 2 - Math.cos(tickRatio * pi / 2) * s / 2,
+                        -Math.sin(tickRatio * pi / 2) * s / 2);
+      context.translate(s / 2, s);
+      context.rotate(tickRatio * pi / 2);
+      context.translate(-s / 2, -s);
+    } else if (d == counterclockwise[c]) {
+      context.translate(Math.cos(tickRatio * pi / 2) * s / 2 - s / 2,
+                        -Math.sin(tickRatio * pi / 2) * s / 2);
+      context.translate(s / 2, s);
+      context.rotate(tickRatio * -pi / 2);
+      context.translate(-s / 2, -s);
+    } else {
+      context.translate(0, -tickRatio * size.cell);
+    }
     context.beginPath();
     context.moveTo(s / 8, s);
     context.lineTo(0, 2 * s / 3);
@@ -283,6 +303,14 @@ var Snake = (function () {
     context.fill();
     context.restore();
   }
+
+  function finalAnimation() {
+    var tick = Date.now() - tickStart;
+    paintCanvas(tick / tickSpan);
+    if (tick < tickSpan) {
+      window.requestAnimationFrame(finalAnimation);
+    }
+  }
     
   function gameStep() {
     if (!running) {
@@ -290,6 +318,7 @@ var Snake = (function () {
     }
     var tick = Date.now() - tickStart;
     if (tick < tickSpan) {
+      paintCanvas(tick / tickSpan);
       window.requestAnimationFrame(gameStep);
       return;
     }
@@ -314,7 +343,6 @@ var Snake = (function () {
     if (head.x < 0 || head.x >= numCols ||
         head.y < 0 || head.y >= numRows) {
       stopGame('wall collision');
-      paintCanvas();
       return;
     }
 
@@ -322,7 +350,6 @@ var Snake = (function () {
     item = getItem(head.x, head.y);
     if (item.kind === 'snake') {
       stopGame('self-collision');
-      paintCanvas();
       return;
     }
 
@@ -338,11 +365,13 @@ var Snake = (function () {
       deleteFromFoodList(item.node);
       placeFood();
     }
-    paintCanvas();
+    paintCanvas(0);
     window.requestAnimationFrame(gameStep);
   }
 
   function stopGame(message) {
+    running = false;
+    finalAnimation();
     setMessage(message + '<br> ended with ' + snake.length + ' segments');
     startGameButton.disabled = false;
     pauseGameButton.style.display = 'none';
@@ -402,8 +431,15 @@ var Snake = (function () {
     startGameButton.disabled = true;
     direction = previousDirection = start.direction;
     snake = new Array(start.length);
-    snake[snake.length - 1] = { x: start.x, y: start.y };
-    for (i = snake.length - 2; i >= 0; --i) {
+    snake[snake.length - 1] = {
+      x: start.x + neighbor.x[direction],
+      y: start.y + neighbor.y[direction]
+    };
+    snake[snake.length - 2] = {
+      x: start.x,
+      y: start.y
+    };
+    for (i = snake.length - 3; i >= 0; --i) {
       snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
     }
 
@@ -432,7 +468,7 @@ var Snake = (function () {
     paintCanvas();
     setMessage('');
     pauseGameButton.style.display = 'inline';
-    tickStart = Date.now() - tickSpan;
+    tickStart = Date.now();
     running = true;
     gameStep();
   }
