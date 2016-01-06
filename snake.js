@@ -1,5 +1,5 @@
 var Snake = (function () {
-  var hertz = 2,
+  var hertz = 5,
       tickSpan = 1000 / hertz,
       tickStart,
       tickPause,
@@ -264,23 +264,21 @@ var Snake = (function () {
       context.save();
       transformToCell(here.x, here.y, c);
       context.beginPath();
-      context.moveTo(-3 * s / 8, s / 2);
       if (d == c) {
+        context.moveTo(-3 * s / 8, s / 2);
         context.lineTo(-3 * s / 8, -s / 2);
         context.lineTo(3 * s / 8, -s / 2);
         context.lineTo(3 * s / 8, s / 2);
       } else if (d == clockwise[c]) {
-        context.lineTo(-3 * s / 8, -s / 8);
-        context.arc(-s / 8, -s / 8, s / 4, pi, 3 * pi / 2);
-        context.lineTo(s / 2, -3 * s / 8);
+        context.moveTo(-3 * s / 8, s / 2);
+        context.quadraticCurveTo(-s / 2, -s / 2, s / 2, -3 * s / 8);
         context.lineTo(s / 2, 3 * s / 8);
         context.arc(s / 2, s / 2, s / 8, 3 * pi / 2, pi, true);
       } else {
-        context.arc(-s / 2, s / 2, s / 8, 0, 3 * pi / 2, true);
-        context.lineTo(-s / 2, -3 * s / 8);
-        context.lineTo(s / 8, -3 * s / 8);
-        context.arc(s / 8, -s / 8, s / 4, 3 * pi / 2, 0);
-        context.lineTo(3 * s / 8, s / 2);
+        context.moveTo(3 * s / 8, s / 2);
+        context.quadraticCurveTo(s / 2, -s / 2, -s / 2, -3 * s / 8);
+        context.lineTo(-s / 2, 3 * s / 8);
+        context.arc(-s / 2, s / 2, s / 8, -pi / 2, 0);
       }
       context.closePath();
       context.fill();
