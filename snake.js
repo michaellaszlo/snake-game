@@ -205,6 +205,8 @@ var Snake = (function () {
   function paintCanvas(tickRatio) {
     var foodNode = foodList.first,
         s = size.cell,
+        h = s / 2,
+        b = s / 8,
         w = size.wall,
         c, d,
         here, behind, ahead,
@@ -234,22 +236,25 @@ var Snake = (function () {
     } else {
       transformToCell(behind.x, behind.y, c);
       if (d == clockwise[c]) {
-        context.translate(s / 2, -s / 2);
+        // Fill the pre-tail.
+        // Stroke the pre-tail.
+        // Transform to paint the tail.
+        context.translate(h, -h);
         context.rotate(tickRatio * pi / 2);
-        context.translate(-s / 2, s / 2);
+        context.translate(-h, h);
       } else if (d == counterclockwise[c]) {
-        context.translate(-s / 2, -s / 2);
+        context.translate(-h, -h);
         context.rotate(tickRatio * -pi / 2);
-        context.translate(s / 2, s / 2);
+        context.translate(h, h);
       } else {
         context.translate(0, -tickRatio * size.cell);
       }
     }
     context.beginPath();
-    context.moveTo(-3 * s / 8, -s / 2);
-    context.lineTo(-s / 16, s / 2);
-    context.lineTo(s / 16, s / 2);
-    context.lineTo(3 * s / 8, -s / 2);
+    context.moveTo(-h + b, -h);
+    context.lineTo(-b / 2, h);
+    context.lineTo(b / 2, h);
+    context.lineTo(h - b, -h);
     context.closePath();
     context.fill();
     context.restore();
@@ -265,20 +270,20 @@ var Snake = (function () {
       transformToCell(here.x, here.y, c);
       context.beginPath();
       if (d == c) {
-        context.moveTo(-3 * s / 8, s / 2);
-        context.lineTo(-3 * s / 8, -s / 2);
-        context.lineTo(3 * s / 8, -s / 2);
-        context.lineTo(3 * s / 8, s / 2);
+        context.moveTo(-h + b, h);
+        context.lineTo(-h + b, -h);
+        context.lineTo(h - b, -h);
+        context.lineTo(h - b, h);
       } else if (d == clockwise[c]) {
-        context.moveTo(-3 * s / 8, s / 2);
-        context.quadraticCurveTo(-s / 2, -s / 2, s / 2, -3 * s / 8);
-        context.lineTo(s / 2, 3 * s / 8);
-        context.arc(s / 2, s / 2, s / 8, 3 * pi / 2, pi, true);
+        context.moveTo(-h + b, h);
+        context.quadraticCurveTo(-h, -h, h, -h + b);
+        context.lineTo(h, h - b);
+        context.arc(h, h, b, 3 * pi / 2, pi, true);
       } else {
-        context.moveTo(3 * s / 8, s / 2);
-        context.quadraticCurveTo(s / 2, -s / 2, -s / 2, -3 * s / 8);
-        context.lineTo(-s / 2, 3 * s / 8);
-        context.arc(-s / 2, s / 2, s / 8, -pi / 2, 0);
+        context.moveTo(h - b, h);
+        context.quadraticCurveTo(h, -h, -h, -h + b);
+        context.lineTo(-h, h - b);
+        context.arc(-h, h, b, -pi / 2, 0);
       }
       context.closePath();
       context.fill();
@@ -299,74 +304,74 @@ var Snake = (function () {
     angle = tickRatio * pi / 2;
     if (d == clockwise[c]) {
       // Fill the neck.
-      context.moveTo(-3 * s / 8, s / 2);
-      context.quadraticCurveTo(-s / 2, -s / 2,
-          s / 2 - Math.cos(angle) * 7 * s / 8,
-          s / 2 - Math.sin(angle) * 7 * s / 8);
-      context.lineTo(s / 2 - Math.cos(angle) * s / 8,
-                     s / 2 - Math.sin(angle) * s / 8);
-      context.arc(s / 2, s / 2, s / 8, pi + angle, pi, true);
+      context.moveTo(-h + b, h);
+      context.quadraticCurveTo(-h, -h,
+          h - Math.cos(angle) * (s - b),
+          h - Math.sin(angle) * (s - b));
+      context.lineTo(h - Math.cos(angle) * b,
+                     h - Math.sin(angle) * b);
+      context.arc(h, h, b, pi + angle, pi, true);
       context.closePath();
       context.fill();
       // Stroke the neck.
       context.beginPath();
-      context.moveTo(s / 2 - Math.cos(angle) * 7 * s / 8,
-                     s / 2 - Math.sin(angle) * 7 * s / 8);
-      context.lineTo(s / 2 - Math.cos(angle) * s / 8,
-                     s / 2 - Math.sin(angle) * s / 8);
+      context.moveTo(h - Math.cos(angle) * (s - b),
+                     h - Math.sin(angle) * (s - b));
+      context.lineTo(h - Math.cos(angle) * b,
+                     h - Math.sin(angle) * b);
       context.closePath();
       context.stroke();
-      // Transform before painting the head.
-      context.translate(s / 2, s / 2);
+      // Transform to paint the head.
+      context.translate(h, h);
       context.rotate(angle);
-      context.translate(-s / 2, -s / 2);
+      context.translate(-h, -h);
     } else if (d == counterclockwise[c]) {
       // Fill the neck.
-      context.moveTo(3 * s / 8, s / 2);
-      context.quadraticCurveTo(s / 2, -s / 2,
-          -s / 2 + Math.cos(angle) * 7 * s / 8,
-          s / 2 - Math.sin(angle) * 7 * s / 8);
+      context.moveTo(h - b, h);
+      context.quadraticCurveTo(h, -h,
+          -h + Math.cos(angle) * (s - b),
+          h - Math.sin(angle) * (s - b));
       context.lineTo(
-          -s / 2 + Math.cos(angle) * s / 8,
-          s / 2 - Math.sin(angle) * s / 8);
-      context.arc(-s / 2, s / 2, s / 8, -angle, 0);
+          -h + Math.cos(angle) * b,
+          h - Math.sin(angle) * b);
+      context.arc(-h, h, b, -angle, 0);
       context.closePath();
       context.fill();
       // Stroke the neck.
       context.beginPath();
-      context.moveTo(-s / 2 + Math.cos(angle) * 7 * s / 8,
-                     s / 2 - Math.sin(angle) * 7 * s / 8);
-      context.lineTo(-s / 2 + Math.cos(angle) * s / 8,
-                     s / 2 - Math.sin(angle) * s / 8);
+      context.moveTo(-h + Math.cos(angle) * (s - b),
+                     h - Math.sin(angle) * (s - b));
+      context.lineTo(-h + Math.cos(angle) * b,
+                     h - Math.sin(angle) * b);
       context.closePath();
       context.stroke();
-      // Transform before painting the head.
-      context.translate(-s / 2, s / 2);
+      // Transform to paint the head.
+      context.translate(-h, h);
       context.rotate(-angle);
-      context.translate(s / 2, -s / 2);
+      context.translate(h, -h);
     } else {
       // Paint the neck.
-      context.moveTo(3 * s / 8, s / 2);
-      context.lineTo(3 * s / 8, s / 2 - tickRatio * size.cell);
-      context.lineTo(-3 * s / 8, s / 2 - tickRatio * size.cell);
-      context.lineTo(-3 * s / 8, s / 2);
+      context.moveTo(h - b, h);
+      context.lineTo(h - b, h - tickRatio * size.cell);
+      context.lineTo(-h + b, h - tickRatio * size.cell);
+      context.lineTo(-h + b, h);
       context.closePath();
       context.fill();
       context.beginPath();
-      context.moveTo(3 * s / 8, s / 2 - tickRatio * size.cell);
-      context.lineTo(-3 * s / 8, s / 2 - tickRatio * size.cell);
+      context.moveTo(h - b, h - tickRatio * size.cell);
+      context.lineTo(-h + b, h - tickRatio * size.cell);
       context.closePath();
       context.stroke();
       // Transform before painting the head.
       context.translate(0, -tickRatio * size.cell);
     }
     context.beginPath();
-    context.moveTo(-3 * s / 8, s / 2);
-    context.lineTo(-s / 2, s / 6);
-    context.lineTo(-s / 6, -s / 2);
-    context.lineTo(s / 6, -s / 2);
-    context.lineTo(s / 2, s / 6);
-    context.lineTo(3 * s / 8, s / 2);
+    context.moveTo(-h + b, h);
+    context.lineTo(-h, h / 3);
+    context.lineTo(-h / 3, -h);
+    context.lineTo(h / 3, -h);
+    context.lineTo(h, h / 3);
+    context.lineTo(h - b, h);
     context.closePath();
     context.fillStyle = color.snake.head;
     context.fill();
