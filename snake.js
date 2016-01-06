@@ -1,19 +1,20 @@
 var Snake = (function () {
-  var hertz = 5,
+  var hertz = 2,
       tickSpan = 1000 / hertz,
       tickStart,
       tickPause,
-      numRows = 10,
-      numCols = 10,
+      numRows = 12,
+      numCols = 12,
       start = {
-        length: 3,
+        length: 6,
         direction: 'east',
         x: 1, y: 1
       },
       size = {
-        cell: 18,
-        wall: 8
+        cell: 24,
+        wall: 5
       },
+      numFood = 4,
       shape = {
         food: 7
       },
@@ -208,6 +209,7 @@ var Snake = (function () {
         c, d,
         here, behind, ahead,
         head, neck, tail,
+        angle,
         i;
 
     context.fillStyle = color.wall;
@@ -293,15 +295,71 @@ var Snake = (function () {
     d = calculateDirection(neck.x, neck.y, head.x, head.y);
     context.save();
     transformToCell(neck.x, neck.y, c);
+    context.beginPath();
+    context.fillStyle = color.snake.body;
+    context.strokeStyle = color.snake.body;
+    angle = tickRatio * pi / 2;
     if (d == clockwise[c]) {
+      // Fill the neck.
+      context.moveTo(-3 * s / 8, s / 2);
+      context.quadraticCurveTo(-s / 2, -s / 2,
+          s / 2 - Math.cos(angle) * 7 * s / 8,
+          s / 2 - Math.sin(angle) * 7 * s / 8);
+      context.lineTo(s / 2 - Math.cos(angle) * s / 8,
+                     s / 2 - Math.sin(angle) * s / 8);
+      context.arc(s / 2, s / 2, s / 8, pi + angle, pi, true);
+      context.closePath();
+      context.fill();
+      // Stroke the neck.
+      context.beginPath();
+      context.moveTo(s / 2 - Math.cos(angle) * 7 * s / 8,
+                     s / 2 - Math.sin(angle) * 7 * s / 8);
+      context.lineTo(s / 2 - Math.cos(angle) * s / 8,
+                     s / 2 - Math.sin(angle) * s / 8);
+      context.closePath();
+      context.stroke();
+      // Transform before painting the head.
       context.translate(s / 2, s / 2);
-      context.rotate(tickRatio * pi / 2);
+      context.rotate(angle);
       context.translate(-s / 2, -s / 2);
     } else if (d == counterclockwise[c]) {
+      // Fill the neck.
+      context.moveTo(3 * s / 8, s / 2);
+      context.quadraticCurveTo(s / 2, -s / 2,
+          -s / 2 + Math.cos(angle) * 7 * s / 8,
+          s / 2 - Math.sin(angle) * 7 * s / 8);
+      context.lineTo(
+          -s / 2 + Math.cos(angle) * s / 8,
+          s / 2 - Math.sin(angle) * s / 8);
+      context.arc(-s / 2, s / 2, s / 8, -angle, 0);
+      context.closePath();
+      context.fill();
+      // Stroke the neck.
+      context.beginPath();
+      context.moveTo(-s / 2 + Math.cos(angle) * 7 * s / 8,
+                     s / 2 - Math.sin(angle) * 7 * s / 8);
+      context.lineTo(-s / 2 + Math.cos(angle) * s / 8,
+                     s / 2 - Math.sin(angle) * s / 8);
+      context.closePath();
+      context.stroke();
+      // Transform before painting the head.
       context.translate(-s / 2, s / 2);
-      context.rotate(tickRatio * -pi / 2);
+      context.rotate(-angle);
       context.translate(s / 2, -s / 2);
     } else {
+      // Paint the neck.
+      context.moveTo(3 * s / 8, s / 2);
+      context.lineTo(3 * s / 8, s / 2 - tickRatio * size.cell);
+      context.lineTo(-3 * s / 8, s / 2 - tickRatio * size.cell);
+      context.lineTo(-3 * s / 8, s / 2);
+      context.closePath();
+      context.fill();
+      context.beginPath();
+      context.moveTo(3 * s / 8, s / 2 - tickRatio * size.cell);
+      context.lineTo(-3 * s / 8, s / 2 - tickRatio * size.cell);
+      context.closePath();
+      context.stroke();
+      // Transform before painting the head.
       context.translate(0, -tickRatio * size.cell);
     }
     context.beginPath();
@@ -477,8 +535,9 @@ var Snake = (function () {
     }
 
     foodList = { count: 0, first: null };
-    placeFood();
-    placeFood();
+    for (i = 0; i < numFood; ++i) {
+      placeFood();
+    }
     paintCanvas();
     setMessage('');
     pauseGameButton.style.display = 'inline';
