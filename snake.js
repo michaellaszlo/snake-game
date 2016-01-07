@@ -11,13 +11,14 @@ var Snake = (function () {
         x: 1, y: 1
       },
       size = {
-        cell: 24,
+        cell: 18,
         wall: 5
       },
       numFood = 4,
       shape = {
         food: 7
       },
+      numObstacles = 6,
       color = {
         wall: '#d6d4c6',
         food: '#559d34',
@@ -98,20 +99,13 @@ var Snake = (function () {
     return true;
   }
 
-  function placeFood() {
-    // Choose a random location that isn't occupied by the snake.
+  function chooseFreeCell() {
     var foodNode,
         freeRow = free.row,
         choice = Math.floor(Math.random() * free.all),
         count = 0,
         y = -1,
-        x = numCols,
-        polygon,
-        n = shape.food,
-        r = size.cell / 2,
-        dr = r / 8, d,
-        angle0, angle,
-        i, px, py;
+        x = numCols;
     while (count <= choice) {
       ++y;
       count += freeRow[y];
@@ -121,10 +115,25 @@ var Snake = (function () {
       if (grid[y][x].kind === 'empty') {
         --count;
         if (count == choice) {
-          break;
+          return { x: x, y: y };
         }
       }
     }
+  }
+
+  function placeObstacle() {
+  }
+
+  function placeFood() {
+    var location = chooseFreeCell(),
+        x = location.x,
+        y = location.y,
+        polygon,
+        n = shape.food,
+        r = size.cell / 2,
+        dr = r / 8, d,
+        angle0, angle,
+        i, px, py;
     foodNode = addToFoodList(x, y);
     foodNode.polygon = polygon = new Array(n);
     angle0 = Math.random() * 2 * Math.PI;
@@ -222,6 +231,9 @@ var Snake = (function () {
       paintPolygon(foodNode.x, foodNode.y, foodNode.polygon, color.food);
       foodNode = foodNode.next;
     }
+
+    // Our trigonometric calculations rely on tickRatio <= 1.
+    tickRatio = Math.min(tickRatio, 1);
 
     // Tail.
     behind = previousTail;

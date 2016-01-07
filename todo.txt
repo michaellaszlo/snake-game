@@ -1,11 +1,12 @@
 
-movement queue
-
 obstacles
 
-snake pattern
-
-better progress graphics
+movement queue
 
 levels
+
+patterned snake body
+- implement programmatic snake movement for testing
+
+better progress graphics
 
