@@ -21,9 +21,12 @@ var Snake = (function () {
       numObstacles = 6,
       color = {
         wall: '#d6d4c6',
-        food: '#559d34',
+        food: { fill: '#559d34' },
+        obstacle: { fill: '#abaa8b', stroke: '#868477' },
         snake: { body: '#2255a2', head: '#0f266b' }
       },
+      foodList,
+      obstacleList,
       pi = Math.PI,
       rotation = {
         north: 0, east: pi / 2, south: pi, west: 3 * pi / 2
@@ -59,7 +62,6 @@ var Snake = (function () {
       previousTail,
       grid,
       free,
-      foodList,
       running;
 
   function pauseGame() {
@@ -130,30 +132,51 @@ var Snake = (function () {
         r = size.cell / 2,
         dr = r / 8, d,
         angle0, angle,
-        i, px, py;
-    foodNode = addToList(foodList, location);
-    foodNode.polygon = polygon = new Array(n);
-    angle0 = Math.random() * 2 * Math.PI;
+        i, px, py,
+        node = addToList(foodList, location);
+    node.polygon = polygon = new Array(n);
+    angle0 = Math.random() * 2 * pi;
     for (i = 0; i < n; ++i) {
-      // Regular placement.
-      angle = angle0 + i * 2 * Math.PI / n;
+      // Regular polygon vertex.
+      angle = angle0 + i * 2 * pi / n;
       px = Math.cos(angle) * (r - dr);
       py = Math.sin(angle) * (r - dr);
       // Random variation.
-      angle = Math.random() * 2 * Math.PI;
+      angle = Math.random() * 2 * pi;
       d = Math.max(Math.random(), Math.random()) * dr;
       polygon[i] = {
         x: px + Math.cos(angle) * d,
         y: py + Math.sin(angle) * d
       };
     }
-    putItem(x, y, { kind: 'food', node: foodNode });
+    putItem(x, y, { kind: 'food', node: node });
   }
 
   function placeObstacle() {
     var location = chooseFreeCell(),
         x = location.x,
-        y = location.y;
+        y = location.y,
+        polygon,
+        r = Math.sqrt(2) * 11 * size.cell / 24,
+        dr = size.cell / 24, d,
+        angle,
+        i, px, py,
+        node = addToList(obstacleList, location);
+    node.polygon = polygon = new Array(4);
+    for (i = 0; i < 4; ++i) {
+      // Corner of square.
+      angle = pi / 4 + i * pi / 2;
+      px = Math.cos(angle) * r;
+      py = Math.sin(angle) * r;
+      // Random variation.
+      angle = Math.random() * 2 * pi;
+      d = Math.max(Math.random(), Math.random()) * dr;
+      polygon[i] = {
+        x: px + Math.cos(angle) * d,
+        y: py + Math.sin(angle) * d
+      };
+    }
+    putItem(x, y, { kind: 'obstacle', node: node });
   }
   
   function newList() {
@@ -192,14 +215,18 @@ var Snake = (function () {
     var i;
     context.save();
     transformToCell(x, y, 'north');
-    context.fillStyle = color;
     context.beginPath();
     context.moveTo(polygon[0].x, polygon[0].y);
     for (i = 1; i < polygon.length; ++i) {
       context.lineTo(polygon[i].x, polygon[i].y);
     }
     context.closePath();
+    context.fillStyle = color.fill;
     context.fill();
+    if (color.stroke) {
+      context.strokeStyle = color.stroke;
+      context.stroke();
+    }
     context.restore();
   }
 
@@ -224,7 +251,7 @@ var Snake = (function () {
   }
 
   function paintCanvas(tickRatio) {
-    var foodNode = foodList.first,
+    var node,
         s = size.cell,
         h = s / 2,
         b = s / 8,
@@ -239,9 +266,15 @@ var Snake = (function () {
     context.fillRect(0, 0, size.canvas.width, size.canvas.height);
     context.clearRect(w, w, numCols * s, numRows * s);
 
-    while (foodNode !== null) {
-      paintPolygon(foodNode.x, foodNode.y, foodNode.polygon, color.food);
-      foodNode = foodNode.next;
+    node = foodList.first;
+    while (node !== null) {
+      paintPolygon(node.x, node.y, node.polygon, color.food);
+      node = node.next;
+    }
+    node = obstacleList.first;
+    while (node !== null) {
+      paintPolygon(node.x, node.y, node.polygon, color.obstacle);
+      node = node.next;
     }
 
     // Our trigonometric calculations rely on tickRatio <= 1.
@@ -624,6 +657,10 @@ var Snake = (function () {
     foodList = newList();
     for (i = 0; i < numFood; ++i) {
       placeFood();
+    }
+    obstacleList = newList();
+    for (i = 0; i < numObstacles; ++i) {
+      placeObstacle();
     }
     paintCanvas();
     setMessage('');
