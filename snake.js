@@ -121,9 +121,6 @@ var Snake = (function () {
     }
   }
 
-  function placeObstacle() {
-  }
-
   function placeFood() {
     var location = chooseFreeCell(),
         x = location.x,
@@ -134,7 +131,7 @@ var Snake = (function () {
         dr = r / 8, d,
         angle0, angle,
         i, px, py;
-    foodNode = addToFoodList(x, y);
+    foodNode = addToList(foodList, location);
     foodNode.polygon = polygon = new Array(n);
     angle0 = Math.random() * 2 * Math.PI;
     for (i = 0; i < n; ++i) {
@@ -153,27 +150,42 @@ var Snake = (function () {
     putItem(x, y, { kind: 'food', node: foodNode });
   }
 
-  function addToFoodList(x, y) {
-    var first = foodList.first,
-        foodNode = { x: x, y: y, previous: null, next: first };
-    if (first !== null) {
-      first.previous = foodNode;
-    }
-    foodList.first = foodNode;
-    foodList.count += 1;
-    return foodNode;
+  function placeObstacle() {
+    var location = chooseFreeCell(),
+        x = location.x,
+        y = location.y;
+  }
+  
+  function newList() {
+    return { count: 0, first: null };
   }
 
-  function deleteFromFoodList(foodNode) {
-    if (foodNode.previous === null) {
-      foodList.first = foodNode.next;
+  function addToList(list, values) {
+    var first = list.first,
+        node = { previous: null, next: first };
+    if (first !== null) {
+      first.previous = node;
+    }
+    list.first = node;
+    ++list.count;
+    Object.keys(values).forEach(function (key) {
+      node[key] = values[key];
+    });
+    return node;
+  }
+
+  function deleteFromList(list, node) {
+    var previous = node.previous,
+        next = node.next;
+    if (previous === null) {
+      list.first = next;
     } else {
-      foodNode.previous.next = foodNode.next;
+      previous.next = next
     }
-    if (foodNode.next !== null) {
-      foodNode.next.previous = foodNode.previous;
+    if (next !== null) {
+      next.previous = node.previous;
     }
-    foodList.count -= 1;
+    --list.count;
   }
 
   function paintPolygon(x, y, polygon, color) {
@@ -508,7 +520,7 @@ var Snake = (function () {
       snake.unshift(tail);
       putItem(tail.x, tail.y, { kind: 'snake' });
       setMessage(snake.length + ' segments');
-      deleteFromFoodList(item.node);
+      deleteFromList(foodList, item.node);
       placeFood();
     }
     paintCanvas(0);
@@ -609,7 +621,7 @@ var Snake = (function () {
       putItem(snake[i].x, snake[i].y, { kind: 'snake' });
     }
 
-    foodList = { count: 0, first: null };
+    foodList = newList();
     for (i = 0; i < numFood; ++i) {
       placeFood();
     }
