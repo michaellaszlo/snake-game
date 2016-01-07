@@ -1,12 +1,12 @@
 var Snake = (function () {
-  var hertz = 0.5,
+  var hertz = 5,
       tickSpan = 1000 / hertz,
       tickStart,
       tickPause,
       numRows = 12,
       numCols = 12,
       start = {
-        length: 4,
+        length: 3,
         direction: 'east',
         x: 1, y: 1
       },
@@ -244,7 +244,9 @@ var Snake = (function () {
                        -h - Math.sin(angle) * b);
         context.lineTo(h - Math.cos(angle) * (s - b),
                        -h - Math.sin(angle) * (s - b));
-        context.quadraticCurveTo(-h, -s - h, h, -s - h + b);
+        context.quadraticCurveTo(-h + tickRatio * s,
+                                 -s - h + tickRatio * b,
+                                 h, -s - h + b);
         context.lineTo(h, -h - b);
         context.arc(h, -h, b, -pi / 2, -pi + angle, true);
         context.closePath();
@@ -268,7 +270,9 @@ var Snake = (function () {
                        -h - Math.sin(angle) * b);
         context.lineTo(-h + Math.cos(angle) * (s - b),
                        -h - Math.sin(angle) * (s - b));
-        context.quadraticCurveTo(h, -s - h, -h, -s - h + b);
+        context.quadraticCurveTo(h - tickRatio * s,
+                                 -s - h + tickRatio * b,
+                                 -h, -s - h + b);
         context.lineTo(-h, -h - b);
         context.arc(-h, -h, b, -pi / 2, -angle, 0);
         context.closePath();
@@ -359,9 +363,10 @@ var Snake = (function () {
     if (d == clockwise[c]) {
       // Fill the neck.
       context.moveTo(-h + b, h);
-      context.quadraticCurveTo(-h, -h,
-          h - Math.cos(angle) * (s - b),
-          h - Math.sin(angle) * (s - b));
+      context.quadraticCurveTo(-h + b - tickRatio * b,
+                               h - tickRatio * s,
+                               h - Math.cos(angle) * (s - b),
+                               h - Math.sin(angle) * (s - b));
       context.lineTo(h - Math.cos(angle) * b,
                      h - Math.sin(angle) * b);
       context.arc(h, h, b, pi + angle, pi, true);
@@ -382,12 +387,12 @@ var Snake = (function () {
     } else if (d == counterclockwise[c]) {
       // Fill the neck.
       context.moveTo(h - b, h);
-      context.quadraticCurveTo(h, -h,
-          -h + Math.cos(angle) * (s - b),
-          h - Math.sin(angle) * (s - b));
-      context.lineTo(
-          -h + Math.cos(angle) * b,
-          h - Math.sin(angle) * b);
+      context.quadraticCurveTo(h - b + tickRatio * b,
+                               h - tickRatio * s,
+                               -h + Math.cos(angle) * (s - b),
+                               h - Math.sin(angle) * (s - b));
+      context.lineTo(-h + Math.cos(angle) * b,
+                     h - Math.sin(angle) * b);
       context.arc(-h, h, b, -angle, 0);
       context.closePath();
       context.fill();
