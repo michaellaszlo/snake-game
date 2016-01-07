@@ -18,7 +18,7 @@ var Snake = (function () {
       shape = {
         food: 7
       },
-      numObstacles = 6,
+      numObstacles = 8,
       color = {
         wall: '#d6d4c6',
         food: { fill: '#559d34' },
@@ -157,7 +157,7 @@ var Snake = (function () {
         x = location.x,
         y = location.y,
         polygon,
-        r = Math.sqrt(2) * 11 * size.cell / 24,
+        r = Math.sqrt(2) * 8 * size.cell / 18,
         dr = size.cell / 24, d,
         angle,
         i, px, py,
@@ -541,6 +541,13 @@ var Snake = (function () {
     item = getItem(head.x, head.y);
     if (item.kind === 'snake') {
       stopGame('self-collision');
+      return;
+    }
+
+    // Check for head colliding with obstacle.
+    item = getItem(head.x, head.y);
+    if (item.kind === 'obstacle') {
+      stopGame('obstacle collision');
       return;
     }
 

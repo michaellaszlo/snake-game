@@ -1,12 +1,14 @@
 
-obstacles
+layout validation
 
 action queue
 
-levels
+level goal
+
+level progression
+
+better progress graphics
 
 patterned snake body
 - implement programmatic snake movement for testing
-
-better progress graphics
 
