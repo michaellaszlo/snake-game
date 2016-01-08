@@ -3,6 +3,7 @@ levels
 - random food
 - fixed progressive food
 - vanishing food
+- final level
 
 contiguous obstacle graphics
 

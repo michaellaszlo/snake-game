@@ -13,12 +13,12 @@ var Snake = (function () {
         { map: [ '..   .  ....',
                  '..   .    O.',
                  '  OO .  .. .',
-                 '  O.  . .. .',
-                 '   xX  O    ',
-                 '.. x....  ..',
-                 '.. x....  ..',
-                 '    O       ',
-                 '. .. .  .O  ',
+                 '  O.    .. .',
+                 '     ..O    ',
+                 '..xX....  ..',
+                 '..x ....  ..',
+                 '  x O..     ',
+                 '. ..    .O  ',
                  '. ..  . OO  ',
                  '.O    .   ..',
                  '....  .   ..' ]
@@ -38,7 +38,7 @@ var Snake = (function () {
         snake: { body: '#2255a2', head: '#0f266b' }
       },
       foodList,
-      obstacleList,
+      obstacles,
       pi = Math.PI,
       directions = [ 'north', 'east', 'south', 'west' ],
       rotation = {
@@ -139,17 +139,57 @@ var Snake = (function () {
         head, neck,
         snakeLength = 0,
         x, y;
+    function makeObstacle(x, y) {
+      var cells = [];
+      function floodObstacle(x, y) {
+        var cell = { x: x, y: y, onBorder: false },
+            i, X, Y;
+        cells.push(cell);
+        putItem(x, y, { kind: 'obstacle' });
+        for (i = 0; i < 4; ++i) {
+          X = x + displace.x[directions[i]];
+          Y = y + displace.y[directions[i]];
+          if (X >= 0 && X < numCols && Y >= 0 && Y < numRows) {
+            if (map[Y][X] == 'O') {
+              if (isEmpty(X, Y)) {
+                floodObstacle(X, Y);
+              }
+            } else {
+              cell.onBorder = true;
+            }
+          }
+        }
+      }
+      floodObstacle(x, y);
+      obstacles.push(cells);
+    }
+    function floodSnake(snakeIndex, x, y) {
+      var i, X, Y;
+      snake[snakeIndex] = { x: x, y: y };
+      putItem(x, y, { kind: 'snake' });
+      for (i = 0; i < 4; ++i) {
+        X = x + displace.x[directions[i]];
+        Y = y + displace.y[directions[i]];
+        if (X >= 0 && X < numCols && Y >= 0 && Y < numRows &&
+            map[Y][X] == 'x' && isEmpty(X, Y)) {
+          floodSnake(snakeIndex - 1, X, Y);
+          break;
+        }
+      }
+    }
     numRows = map.length;
     numCols = map[0].length;
     clearGrid();
     foodList = newList();
-    obstacleList = newList();
-    // Place obstacles and find snake head.
+    obstacles = [];
+    // Make obstacles and find snake head.
     for (y = 0; y < numRows; ++y) {
       for (x = 0; x < numCols; ++x) {
         switch (map[y][x]) {
           case 'O':
-            placeObstacle({ x: x, y: y });
+            if (isEmpty(x, y)) {
+              makeObstacle(x, y);
+            }
             break;
           case 'X':
             head = { x: x, y: y };
@@ -159,21 +199,7 @@ var Snake = (function () {
       }
     }
     snake = new Array(snakeLength);
-    function makeSnake(snakeIndex, x, y) {
-      var i, X, Y;
-      snake[snakeIndex] = { x: x, y: y };
-      putItem(x, y, { kind: 'snake' });
-      for (i = 0; i < 4; ++i) {
-        X = x + displace.x[directions[i]];
-        Y = y + displace.y[directions[i]];
-        if (X >= 0 && X < numCols && Y >= 0 && Y < numRows &&
-            map[Y][X] == 'x' && isEmpty(X, Y)) {
-          makeSnake(snakeIndex - 1, X, Y);
-          break;
-        }
-      }
-    }
-    makeSnake(snakeLength - 1, head.x, head.y);
+    floodSnake(snakeLength - 1, head.x, head.y);
     previousTail = snake[0];
     neck = snake[snake.length - 2];
     direction = previousDirection = calculateDirection(neck.x, neck.y,
@@ -256,12 +282,6 @@ var Snake = (function () {
       };
     }
     putItem(x, y, { kind: 'food', node: node });
-  }
-
-  function placeObstacle(location) {
-    return;
-    var node = addToList(obstacleList, location);
-    putItem(location.x, location.y, { kind: 'obstacle', node: node });
   }
   
   function newList() {
@@ -359,6 +379,15 @@ var Snake = (function () {
     context.fillStyle = color.wall;
     context.fillRect(0, 0, size.canvas.width, size.canvas.height);
     context.clearRect(w, w, numCols * s, numRows * s);
+
+    context.strokeStyle = color.obstacle.stroke;
+    context.fillStyle = color.obstacle.fill;
+    obstacles.forEach(function (cells) {
+      cells.forEach(function (cell) {
+        context.fillRect(w + cell.x * s, w + cell.y * s, s, s);
+        context.strokeRect(w + cell.x * s, w + cell.y * s, s, s);
+      });
+    });
 
     node = foodList.first;
     while (node !== null) {
