@@ -1,14 +1,15 @@
 
-layout validation
+levels
+- random food
+- fixed progressive food
+- vanishing food
 
-action queue
+contiguous obstacle graphics
 
-level goal
+reconsider controls
 
-level progression
+progression graphics
 
-better progress graphics
+help graphics
 
-patterned snake body
-- implement programmatic snake movement for testing
 

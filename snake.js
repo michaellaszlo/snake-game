@@ -3,22 +3,34 @@ var Snake = (function () {
       tickSpan = 1000 / hertz,
       tickStart,
       tickPause,
-      numRows = 12,
-      numCols = 12,
-      start = {
-        length: 3,
-        direction: 'east',
-        x: 1, y: 1
-      },
+      numRows,
+      numCols,
+      grid,
+      free,
+      snake,
+      previousTail,
+      levels = [
+        { map: [ '..   .  ....',
+                 '..   .    O.',
+                 '  OO .  .. .',
+                 '  O.  . .. .',
+                 '   xX  O    ',
+                 '.. x....  ..',
+                 '.. x....  ..',
+                 '    O       ',
+                 '. .. .  .O  ',
+                 '. ..  . OO  ',
+                 '.O    .   ..',
+                 '....  .   ..' ]
+        },
+      ],
       size = {
-        cell: 18,
+        cell: 24,
         wall: 5
       },
-      numFood = 4,
       shape = {
         food: 7
       },
-      numObstacles = 8,
       color = {
         wall: '#d6d4c6',
         food: { fill: '#559d34' },
@@ -28,6 +40,7 @@ var Snake = (function () {
       foodList,
       obstacleList,
       pi = Math.PI,
+      directions = [ 'north', 'east', 'south', 'west' ],
       rotation = {
         north: 0, east: pi / 2, south: pi, west: 3 * pi / 2
       },
@@ -58,10 +71,6 @@ var Snake = (function () {
       pauseGameButton,
       direction,
       previousDirection,
-      snake,
-      previousTail,
-      grid,
-      free,
       running;
 
   function pauseGame() {
@@ -77,12 +86,31 @@ var Snake = (function () {
     }
   }
 
-  function getItem(x, y) {
-    return grid[y][x];
+  function clearGrid() {
+    var rowCount,
+        x, y;
+    grid = new Array(numRows);
+    for (y = 0; y < numRows; ++y) {
+      grid[y] = new Array(numCols);
+      for (x = 0; x < numCols; ++x) {
+        grid[y][x] = { kind: 'empty' };
+      }
+    }
+    free = {
+      row: rowCount = new Array(numRows),
+      all: numRows * numCols
+    };
+    for (y = 0; y < numRows; ++y) {
+      rowCount[y] = numCols;
+    }
+  }
+
+  function isEmpty(x, y) {
+    return grid[y][x].kind === 'empty';
   }
 
   function putItem(x, y, item) {
-    if (grid[y][x].kind !== 'empty') {
+    if (!isEmpty(x, y)) {
       return false;
     }
     grid[y][x] = item;
@@ -91,14 +119,92 @@ var Snake = (function () {
     return true;
   }
 
+  function getItem(x, y) {
+    return grid[y][x];
+  }
+
   function wipeCell (x, y) {
-    if (grid[y][x].kind === 'empty') {
+    if (isEmpty(x, y)) {
       return false;
     }
     grid[y][x] = { kind: 'empty' };
     ++free.row[y];
     ++free.all;
     return true;
+  }
+
+  function loadLevel(levelIndex) {
+    var level = levels[levelIndex],
+        map = level.map,
+        head, neck,
+        snakeLength = 0,
+        x, y;
+    numRows = map.length;
+    numCols = map[0].length;
+    clearGrid();
+    foodList = newList();
+    obstacleList = newList();
+    // Place obstacles and find snake head.
+    for (y = 0; y < numRows; ++y) {
+      for (x = 0; x < numCols; ++x) {
+        switch (map[y][x]) {
+          case 'O':
+            placeObstacle({ x: x, y: y });
+            break;
+          case 'X':
+            head = { x: x, y: y };
+          case 'x':
+            ++snakeLength;
+        }
+      }
+    }
+    snake = new Array(snakeLength);
+    function makeSnake(snakeIndex, x, y) {
+      var i, X, Y;
+      snake[snakeIndex] = { x: x, y: y };
+      putItem(x, y, { kind: 'snake' });
+      for (i = 0; i < 4; ++i) {
+        X = x + displace.x[directions[i]];
+        Y = y + displace.y[directions[i]];
+        if (X >= 0 && X < numCols && Y >= 0 && Y < numRows &&
+            map[Y][X] == 'x' && isEmpty(X, Y)) {
+          makeSnake(snakeIndex - 1, X, Y);
+          break;
+        }
+      }
+    }
+    makeSnake(snakeLength - 1, head.x, head.y);
+    previousTail = snake[0];
+    neck = snake[snake.length - 2];
+    direction = previousDirection = calculateDirection(neck.x, neck.y,
+        head.x, head.y);
+    /*
+    start = {
+      length: 3,
+      direction: 'east',
+      x: 1, y: 1
+    };
+    direction = previousDirection = start.direction;
+    snake = new Array(start.length);
+    snake[snake.length - 1] = {
+      x: start.x + displace.x[direction],
+      y: start.y + displace.y[direction]
+    };
+    snake[snake.length - 2] = {
+      x: start.x,
+      y: start.y
+    };
+    for (i = snake.length - 3; i >= 0; --i) {
+      snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
+    }
+    previousTail = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
+    for (i = snake.length - 1; i >= 0; --i) {
+      putItem(snake[i].x, snake[i].y, { kind: 'snake' });
+    }
+    for (i = 0; i < numFood; ++i) {
+      placeFood();
+    }
+    */
   }
 
   function chooseFreeCell() {
@@ -152,31 +258,10 @@ var Snake = (function () {
     putItem(x, y, { kind: 'food', node: node });
   }
 
-  function placeObstacle() {
-    var location = chooseFreeCell(),
-        x = location.x,
-        y = location.y,
-        polygon,
-        r = Math.sqrt(2) * 8 * size.cell / 18,
-        dr = size.cell / 24, d,
-        angle,
-        i, px, py,
-        node = addToList(obstacleList, location);
-    node.polygon = polygon = new Array(4);
-    for (i = 0; i < 4; ++i) {
-      // Corner of square.
-      angle = pi / 4 + i * pi / 2;
-      px = Math.cos(angle) * r;
-      py = Math.sin(angle) * r;
-      // Random variation.
-      angle = Math.random() * 2 * pi;
-      d = Math.max(Math.random(), Math.random()) * dr;
-      polygon[i] = {
-        x: px + Math.cos(angle) * d,
-        y: py + Math.sin(angle) * d
-      };
-    }
-    putItem(x, y, { kind: 'obstacle', node: node });
+  function placeObstacle(location) {
+    return;
+    var node = addToList(obstacleList, location);
+    putItem(location.x, location.y, { kind: 'obstacle', node: node });
   }
   
   function newList() {
@@ -250,6 +335,15 @@ var Snake = (function () {
     return 'west';
   }
 
+  function prepareCanvas() {
+    size.canvas = {
+      width: numCols * size.cell + 2 * size.wall,
+      height: numRows * size.cell + 2 * size.wall
+    };
+    canvas.width = size.canvas.width;
+    canvas.height = size.canvas.height;
+  }
+
   function paintCanvas(tickRatio) {
     var node,
         s = size.cell,
@@ -269,11 +363,6 @@ var Snake = (function () {
     node = foodList.first;
     while (node !== null) {
       paintPolygon(node.x, node.y, node.polygon, color.food);
-      node = node.next;
-    }
-    node = obstacleList.first;
-    while (node !== null) {
-      paintPolygon(node.x, node.y, node.polygon, color.obstacle);
       node = node.next;
     }
 
@@ -494,14 +583,6 @@ var Snake = (function () {
     context.fill();
     context.restore();
   }
-
-  function finalAnimation() {
-    var tick = Date.now() - tickStart;
-    paintCanvas(tick / tickSpan);
-    if (tick < tickSpan) {
-      window.requestAnimationFrame(finalAnimation);
-    }
-  }
     
   function gameStep() {
     var tick,
@@ -567,6 +648,14 @@ var Snake = (function () {
     window.requestAnimationFrame(gameStep);
   }
 
+  function finalAnimation() {
+    var tick = Date.now() - tickStart;
+    paintCanvas(tick / tickSpan);
+    if (tick < tickSpan) {
+      window.requestAnimationFrame(finalAnimation);
+    }
+  }
+
   function stopGame(message) {
     running = false;
     finalAnimation();
@@ -591,18 +680,23 @@ var Snake = (function () {
     messageBox.innerHTML = message;
   }
 
+  function startGame() {
+    startGameButton.disabled = true;
+    setMessage('');
+    loadLevel(0);
+    prepareCanvas();
+    running = true;
+    tickStart = Date.now();
+    gameStep();
+    pauseGameButton.style.display = 'inline';
+  }
+
   function init() {
     var direction,
         keyCode;
 
     canvas = document.getElementById('gameCanvas');
     context = canvas.getContext('2d');
-    size.canvas = {
-      width: numCols * size.cell + 2 * size.wall,
-      height: numRows * size.cell + 2 * size.wall
-    };
-    canvas.width = size.canvas.width;
-    canvas.height = size.canvas.height;
 
     // Invert the key mapping for easier lookup.
     keyCodeToDir = {};
@@ -621,60 +715,6 @@ var Snake = (function () {
     pauseGameButton.style.display = 'none';
 
     startGame();
-  }
-
-  function startGame() {
-    var rowCount,
-        i, x, y;
-    startGameButton.disabled = true;
-    direction = previousDirection = start.direction;
-    snake = new Array(start.length);
-    snake[snake.length - 1] = {
-      x: start.x + displace.x[direction],
-      y: start.y + displace.y[direction]
-    };
-    snake[snake.length - 2] = {
-      x: start.x,
-      y: start.y
-    };
-    for (i = snake.length - 3; i >= 0; --i) {
-      snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
-    }
-    previousTail = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
-
-    grid = new Array(numRows);
-    for (y = 0; y < numRows; ++y) {
-      grid[y] = new Array(numCols);
-      for (x = 0; x < numCols; ++x) {
-        grid[y][x] = { kind: 'empty' };
-      }
-    }
-
-    free = {
-      row: rowCount = new Array(numRows),
-      all: numRows * numCols
-    };
-    for (y = 0; y < numRows; ++y) {
-      rowCount[y] = numCols;
-    }
-    for (i = snake.length - 1; i >= 0; --i) {
-      putItem(snake[i].x, snake[i].y, { kind: 'snake' });
-    }
-
-    foodList = newList();
-    for (i = 0; i < numFood; ++i) {
-      placeFood();
-    }
-    obstacleList = newList();
-    for (i = 0; i < numObstacles; ++i) {
-      placeObstacle();
-    }
-    paintCanvas();
-    setMessage('');
-    pauseGameButton.style.display = 'inline';
-    tickStart = Date.now();
-    running = true;
-    gameStep();
   }
 
   return {
