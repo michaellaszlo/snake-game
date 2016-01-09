@@ -62,7 +62,8 @@ var Snake = (function () {
         north: [38, 87],
         east: [39, 68],
         south: [40, 83],
-        west: [37, 65]
+        west: [37, 65],
+        pause: [32, 16, 13]
       },
       keyCodeToDir,
       canvas,
@@ -719,6 +720,10 @@ var Snake = (function () {
         inputDirection;
     if (keyCode in keyCodeToDir) {
       inputDirection = keyCodeToDir[keyCode];
+      if (inputDirection === 'pause') {
+        pauseGame();
+        return;
+      }
       if (inputDirection == opposite[previousDirection]) {
         return;
       }
