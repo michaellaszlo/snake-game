@@ -7,6 +7,11 @@ levels
 
 contiguous obstacle graphics
 
+improve snake graphics
++ better head
+- flexible tail
+- body pattern
+
 reconsider controls
 
 progression graphics

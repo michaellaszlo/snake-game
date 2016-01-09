@@ -10,7 +10,8 @@ var Snake = (function () {
       snake,
       previousTail,
       levels = [
-        { map: [ '..   .  ....',
+        {
+          map: [ '..   .  ....',
                  '..   .    O.',
                  '  OO .  .. .',
                  '  O.    .. .',
@@ -35,7 +36,7 @@ var Snake = (function () {
         wall: '#d6d4c6',
         food: { fill: '#559d34' },
         obstacle: { fill: '#abaa8b', stroke: '#868477' },
-        snake: { body: '#2255a2', head: '#0f266b' }
+        snake: { body: '#2255a2', head: '#0f266b', eyes: '#45575e' }
       },
       foodList,
       obstacles,
@@ -600,15 +601,35 @@ var Snake = (function () {
       // Transform to paint the head.
       context.translate(0, -tickRatio * size.cell);
     }
+    // Main head shape.
     context.beginPath();
     context.moveTo(-h + b, h);
     context.lineTo(-h, h / 3);
-    context.lineTo(-h / 3, -h);
-    context.lineTo(h / 3, -h);
+    context.lineTo(-h / 4, -h);
+    context.lineTo(h / 4, -h);
     context.lineTo(h, h / 3);
     context.lineTo(h - b, h);
     context.closePath();
     context.fillStyle = color.snake.head;
+    context.fill();
+    // Neck cutout.
+    context.beginPath();
+    context.moveTo(-h / 2, h);
+    context.lineTo(0, h / 2);
+    context.lineTo(h / 2, h);
+    context.closePath();
+    context.fillStyle = color.snake.body;
+    context.fill();
+    // Eyes.
+    context.beginPath();
+    context.moveTo(-h / 2 - b / 2, h / 3);
+    context.lineTo(-h / 2 + b / 2, -h / 6);
+    context.lineTo(-h / 2 + b, h / 3);
+    context.moveTo(h / 2 + b / 2, h / 3);
+    context.lineTo(h / 2 - b / 2, -h / 6);
+    context.lineTo(h / 2 - b, h / 3);
+    context.closePath();
+    context.fillStyle = color.snake.eyes;
     context.fill();
     context.restore();
   }
