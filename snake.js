@@ -375,7 +375,8 @@ var Snake = (function () {
         c, d,
         here, behind, ahead,
         head, neck, tail,
-        angle,
+        angle, a,
+        tx, x, y,
         i;
 
     context.fillStyle = color.wall;
@@ -486,10 +487,17 @@ var Snake = (function () {
       }
     }
     context.beginPath();
+    tx = h - b / 2;
+    a = 0;
+    if (d != c) {
+      a = 2 * Math.min(angle, pi / 2 - angle);
+      if (d == counterclockwise[c]) {
+        a = -a;
+      }
+    }
     context.moveTo(-h + b, -h);
-    context.lineTo(-b / 2, h);
-    context.lineTo(b / 2, h);
-    context.lineTo(h - b, -h);
+    context.quadraticCurveTo(-tx / 2, 0, h * Math.sin(a), h * Math.cos(a));
+    context.quadraticCurveTo(tx / 2, 0, h - b, -h);
     context.closePath();
     context.fill();
     context.restore();
@@ -615,9 +623,9 @@ var Snake = (function () {
     context.fill();
     // Neck cutout.
     context.beginPath();
-    context.moveTo(-h / 2, h);
+    context.moveTo(-h / 2, h + 1);
     context.lineTo(0, h / 2);
-    context.lineTo(h / 2, h);
+    context.lineTo(h / 2, h + 1);
     context.closePath();
     context.fillStyle = color.snake.body;
     context.fill();
@@ -741,7 +749,7 @@ var Snake = (function () {
     loadLevel(0);
     prepareCanvas();
     running = true;
-    tickStart = Date.now();
+    tickStart = Date.now() - tickSpan;
     gameStep();
     pauseGameButton.style.display = 'inline';
   }
