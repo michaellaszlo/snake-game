@@ -16,28 +16,38 @@ button, #messageBox, #actionBox {
 }
 
 #actionBox {
-  font-size: 24px;
   color: #333;
 }
-.arrow {
+.action {
+  display: inline-block;
+  position: relative;
+}
+.action .arrow {
   display: inline-block;
   padding: 0 2px;
+  font-size: 24px;
 }
-.arrow.north {
+.action .tick {
+  font-size: 10px;
+  position: absolute;
+  bottom: -10px;
+  left: -2px;
+}
+.action.north .arrow {
   transform: rotate(0.75turn);
 }
-.arrow.east {
+.action.east .arrow {
   transform: rotate(0.00turn);
 }
-.arrow.south {
+.action.south .arrow {
   transform: rotate(0.25turn);
 }
-.arrow.west {
+.action.west .arrow {
   transform: rotate(0.50turn);
 }
-.arrow.backward {
+.arrow.backward .arrow {
   color: #ddd;
 }
-.arrow.overridden {
+.arrow.overridden .arrow {
   color: #f8cacc;
 }

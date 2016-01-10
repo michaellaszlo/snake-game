@@ -663,6 +663,7 @@ var Snake = (function () {
       window.requestAnimationFrame(gameStep);
       return;
     }
+    ++tick.count;
     tick.start = Date.now();
 
     // Chop off the tail and make a new head.
@@ -731,7 +732,7 @@ var Snake = (function () {
 
   function keyDownHandler(event) {
     var action,
-        arrow;
+        element;
     if (event.keyCode in keyCodeToAction) {
       action = keyCodeToAction[event.keyCode];
       if (action === 'pause') {
@@ -739,17 +740,18 @@ var Snake = (function () {
         return;
       }
       // Currently the only actions are pause and the four directions.
-      arrow = document.createElement('div');
+      element = document.createElement('div');
       if (actions.queue.length == actions.maxQueueLength) {
-        actions.box.removeChild(actions.queue[0].arrow);
+        actions.box.removeChild(actions.queue[0].element);
         actions.queue.shift();
       }
-      actions.queue.push({ arrow: arrow });
-      arrow.className = 'arrow ' + direction;
-      arrow.innerHTML = '&#x2794;';
-      actions.box.appendChild(arrow);
+      actions.queue.push({ element: element });
+      element.className = 'action ' + direction;
+      element.innerHTML = '<span class="arrow">&#x2794;</span>' +
+          '<span class="tick">' + tick.count + '</span>';
+      actions.box.appendChild(element);
       if (action == opposite[previousDirection]) {
-        arrow.className += ' backward';
+        element.className += ' backward';
         return;
       }
       direction = action;
@@ -768,6 +770,7 @@ var Snake = (function () {
     prepareCanvas();
     status.playing = true;
     status.paused = false;
+    tick.count = 0;
     tick.start = Date.now() - tick.span;
     gameStep();
     pauseGameButton.style.display = 'inline';
