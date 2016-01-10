@@ -1,8 +1,8 @@
 var Snake = (function () {
   var hertz = 5,
-      tickSpan = 1000 / hertz,
-      tickStart,
-      tickPause,
+      tick = {
+        span: 1000 / hertz
+      },
       numRows,
       numCols,
       grid,
@@ -76,17 +76,20 @@ var Snake = (function () {
       pauseGameButton,
       direction,
       previousDirection,
-      running;
+      status = {};
 
   function pauseGame() {
-    if (running) {
-      running = false;
-      tickPause = Date.now() - tickStart;
+    if (!status.playing) {
+      return;
+    }
+    if (!status.paused) {
+      status.paused = true;
+      tick.paused = Date.now() - tick.start;
       pauseGameButton.innerHTML = 'resume';
     } else {
-      running = true;
+      status.paused = false;
       pauseGameButton.innerHTML = 'pause';
-      tickStart = Date.now() - tickPause;
+      tick.start = Date.now() - tick.paused;
       gameStep();
     }
   }
@@ -647,20 +650,20 @@ var Snake = (function () {
   }
     
   function gameStep() {
-    var tick,
+    var elapsed,
         head, tail,
         item, i;
 
-    if (!running) {
+    if (!status.playing || status.paused) {
       return;
     }
-    tick = Date.now() - tickStart;
-    if (tick < tickSpan) {
-      paintCanvas(tick / tickSpan);
+    elapsed = Date.now() - tick.start;
+    if (elapsed < tick.span) {
+      paintCanvas(elapsed / tick.span);
       window.requestAnimationFrame(gameStep);
       return;
     }
-    tickStart = Date.now();
+    tick.start = Date.now();
 
     // Chop off the tail and make a new head.
     previousTail = tail = snake.shift();
@@ -711,15 +714,15 @@ var Snake = (function () {
   }
 
   function finalAnimation() {
-    var tick = Date.now() - tickStart;
-    paintCanvas(tick / tickSpan);
-    if (tick < tickSpan) {
+    var elapsed = Date.now() - tick.start;
+    paintCanvas(elapsed / tick.span);
+    if (elapsed < tick.span) {
       window.requestAnimationFrame(finalAnimation);
     }
   }
 
   function stopGame(message) {
-    running = false;
+    status.playing = false;
     finalAnimation();
     setMessage(message + '<br> ended with ' + snake.length + ' segments');
     startGameButton.disabled = false;
@@ -763,8 +766,9 @@ var Snake = (function () {
     setMessage('');
     loadLevel(0);
     prepareCanvas();
-    running = true;
-    tickStart = Date.now() - tickSpan;
+    status.playing = true;
+    status.paused = false;
+    tick.start = Date.now() - tick.span;
     gameStep();
     pauseGameButton.style.display = 'inline';
   }
