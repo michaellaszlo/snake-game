@@ -17,9 +17,11 @@ button, #messageBox, #actionBox {
 
 #actionBox {
   font-size: 24px;
+  color: #333;
 }
 .arrow {
   display: inline-block;
+  padding: 0 2px;
 }
 .arrow.north {
   transform: rotate(0.75turn);
@@ -32,4 +34,10 @@ button, #messageBox, #actionBox {
 }
 .arrow.west {
   transform: rotate(0.50turn);
+}
+.arrow.backward {
+  color: #ddd;
+}
+.arrow.overridden {
+  color: #f8cacc;
 }

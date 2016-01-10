@@ -66,10 +66,12 @@ var Snake = (function () {
         pause: [32, 16, 13]
       },
       keyCodeToAction,
+      actions = {
+        maxQueueLength: 10
+      },
       canvas,
       context,
       messageBox,
-      actionBox,
       startGameButton,
       pauseGameButton,
       direction,
@@ -725,20 +727,29 @@ var Snake = (function () {
   }
 
   function keyDownHandler(event) {
-    var keyCode = event.keyCode,
-        action;
-    if (keyCode in keyCodeToAction) {
-      action = keyCodeToAction[keyCode];
+    var action,
+        arrow;
+    if (event.keyCode in keyCodeToAction) {
+      action = keyCodeToAction[event.keyCode];
       if (action === 'pause') {
         pauseGame();
         return;
       }
+      // Currently the only actions are pause and the four directions.
+      arrow = document.createElement('div');
+      if (actions.queue.length == actions.maxQueueLength) {
+        actions.box.removeChild(actions.queue[0].arrow);
+        actions.queue.shift();
+      }
+      actions.queue.push({ arrow: arrow });
+      arrow.className = 'arrow ' + direction;
+      arrow.innerHTML = '&#x2794;';
+      actions.box.appendChild(arrow);
       if (action == opposite[previousDirection]) {
+        arrow.className += ' backward';
         return;
       }
       direction = action;
-      actionBox.innerHTML = '<span class="arrow ' + direction +
-          '">&#x2794;</span>';
     }
   }
 
@@ -748,6 +759,7 @@ var Snake = (function () {
 
   function startGame() {
     startGameButton.disabled = true;
+    actions.queue = [];
     setMessage('');
     loadLevel(0);
     prepareCanvas();
@@ -774,7 +786,7 @@ var Snake = (function () {
     window.onkeydown = keyDownHandler.bind(this);
 
     messageBox = document.getElementById('messageBox');
-    actionBox = document.getElementById('actionBox');
+    actions.box = document.getElementById('actionBox');
     startGameButton = document.getElementById('startGameButton');
     startGameButton.onclick = startGame.bind(this);
     pauseGameButton = document.getElementById('pauseGameButton');
