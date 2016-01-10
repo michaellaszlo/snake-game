@@ -1,18 +1,17 @@
 
+action queue
+
 levels
 - random food
 - fixed progressive food
 - vanishing food
 - final level
 
-contiguous obstacle graphics
-
-improve snake graphics
-+ better head
-- flexible tail
-- body pattern
-
-reconsider controls
+better graphics
+- contiguous obstacles
+- randomized walls
+- hug wall?
+- stripe?
 
 progression graphics
 

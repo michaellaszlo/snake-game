@@ -18,7 +18,7 @@ var Snake = (function () {
                  '     ..O    ',
                  '..xX....  ..',
                  '..x ....  ..',
-                 '  x O..     ',
+                 '    O..     ',
                  '. ..    .O  ',
                  '. ..  . OO  ',
                  '.O    .   ..',
@@ -58,17 +58,18 @@ var Snake = (function () {
         x: { north: 0, east: 1, south: 0, west: -1 },
         y: { north: -1, east: 0, south: 1, west: 0 }
       },
-      dirToKeyCode = {  // Codes for arrow keys and W-A-S-D.
+      actionToKeyCode = {  // Codes for arrow keys and W-A-S-D.
         north: [38, 87],
         east: [39, 68],
         south: [40, 83],
         west: [37, 65],
         pause: [32, 16, 13]
       },
-      keyCodeToDir,
+      keyCodeToAction,
       canvas,
       context,
       messageBox,
+      actionBox,
       startGameButton,
       pauseGameButton,
       direction,
@@ -725,17 +726,19 @@ var Snake = (function () {
 
   function keyDownHandler(event) {
     var keyCode = event.keyCode,
-        inputDirection;
-    if (keyCode in keyCodeToDir) {
-      inputDirection = keyCodeToDir[keyCode];
-      if (inputDirection === 'pause') {
+        action;
+    if (keyCode in keyCodeToAction) {
+      action = keyCodeToAction[keyCode];
+      if (action === 'pause') {
         pauseGame();
         return;
       }
-      if (inputDirection == opposite[previousDirection]) {
+      if (action == opposite[previousDirection]) {
         return;
       }
-      direction = inputDirection;
+      direction = action;
+      actionBox.innerHTML = '<span class="arrow ' + direction +
+          '">&#x2794;</span>';
     }
   }
 
@@ -762,15 +765,16 @@ var Snake = (function () {
     context = canvas.getContext('2d');
 
     // Invert the key mapping for easier lookup.
-    keyCodeToDir = {};
-    for (direction in dirToKeyCode) {
-      dirToKeyCode[direction].forEach(function (keyCode) {
-        keyCodeToDir[keyCode] = direction;
+    keyCodeToAction = {};
+    for (direction in actionToKeyCode) {
+      actionToKeyCode[direction].forEach(function (keyCode) {
+        keyCodeToAction[keyCode] = direction;
       });
     }
     window.onkeydown = keyDownHandler.bind(this);
 
     messageBox = document.getElementById('messageBox');
+    actionBox = document.getElementById('actionBox');
     startGameButton = document.getElementById('startGameButton');
     startGameButton.onclick = startGame.bind(this);
     pauseGameButton = document.getElementById('pauseGameButton');
