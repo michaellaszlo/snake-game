@@ -664,6 +664,7 @@ var Snake = (function () {
       return;
     }
     ++tick.count;
+    delete tick.action;
     tick.start = Date.now();
 
     // Chop off the tail and make a new head.
@@ -746,7 +747,7 @@ var Snake = (function () {
         actions.queue.shift();
       }
       actions.queue.push({ element: element });
-      element.className = 'action ' + direction;
+      element.className = 'action ' + action;
       element.innerHTML = '<span class="arrow">&#x2794;</span>' +
           '<span class="tick">' + tick.count + '</span>';
       actions.box.appendChild(element);
@@ -754,6 +755,11 @@ var Snake = (function () {
         element.className += ' backward';
         return;
       }
+      if (tick.action) {
+        actions.queue[actions.queue.length - 2].element.className +=
+            ' overridden';
+      }
+      tick.action = action;
       direction = action;
     }
   }

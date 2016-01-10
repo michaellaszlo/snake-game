@@ -32,6 +32,7 @@ button, #messageBox, #actionBox {
   position: absolute;
   bottom: -10px;
   left: -2px;
+  color: #ddd;
 }
 .action.north .arrow {
   transform: rotate(0.75turn);
@@ -45,9 +46,9 @@ button, #messageBox, #actionBox {
 .action.west .arrow {
   transform: rotate(0.50turn);
 }
-.arrow.backward .arrow {
+.action.backward .arrow {
   color: #ddd;
 }
-.arrow.overridden .arrow {
-  color: #f8cacc;
+.action.overridden .arrow {
+  color: #f8898c;
 }
