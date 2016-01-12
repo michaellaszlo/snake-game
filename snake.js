@@ -18,7 +18,7 @@ var Snake = (function () {
                  '     ..O    ',
                  '..xX....  ..',
                  '..x ....  ..',
-                 '    O..     ',
+                 '  x O..     ',
                  '. ..    .O  ',
                  '. ..  . OO  ',
                  '.O    .   ..',
@@ -144,101 +144,55 @@ var Snake = (function () {
   function loadLevel(levelIndex) {
     var level = levels[levelIndex],
         map = level.map,
+        obstacle,
         head, neck,
-        snakeLength = 0,
         x, y;
-    function makeObstacle(x, y) {
-      var cells = [];
-      function floodObstacle(x, y) {
-        var cell = { x: x, y: y, onBorder: false },
-            i, X, Y;
-        cells.push(cell);
-        putItem(x, y, { kind: 'obstacle' });
-        for (i = 0; i < 4; ++i) {
-          X = x + displace.x[directions[i]];
-          Y = y + displace.y[directions[i]];
-          if (X >= 0 && X < numCols && Y >= 0 && Y < numRows) {
-            if (map[Y][X] == 'O') {
-              if (isEmpty(X, Y)) {
-                floodObstacle(X, Y);
-              }
-            } else {
-              cell.onBorder = true;
-            }
-          }
-        }
-      }
-      floodObstacle(x, y);
-      obstacles.push(cells);
-    }
-    function floodSnake(snakeIndex, x, y) {
-      var i, X, Y;
-      snake[snakeIndex] = { x: x, y: y };
-      putItem(x, y, { kind: 'snake' });
-      for (i = 0; i < 4; ++i) {
-        X = x + displace.x[directions[i]];
-        Y = y + displace.y[directions[i]];
-        if (X >= 0 && X < numCols && Y >= 0 && Y < numRows &&
-            map[Y][X] == 'x' && isEmpty(X, Y)) {
-          floodSnake(snakeIndex - 1, X, Y);
-          break;
-        }
-      }
-    }
     numRows = map.length;
     numCols = map[0].length;
     clearGrid();
     foodList = newList();
     obstacles = [];
-    // Make obstacles and find snake head.
+
+    function flood(stack, kind, ch, x, y) {
+      var i, X, Y;
+      stack.push({ x: x, y: y });
+      putItem(x, y, { kind: kind });
+      for (i = 0; i < 4; ++i) {
+        X = x + displace.x[directions[i]];
+        Y = y + displace.y[directions[i]];
+        if (X >= 0 && X < numCols && Y >= 0 && Y < numRows &&
+            map[Y][X] == ch && isEmpty(X, Y)) {
+          flood(stack, kind, ch, X, Y);
+        }
+      }
+    }
+
     for (y = 0; y < numRows; ++y) {
       for (x = 0; x < numCols; ++x) {
         switch (map[y][x]) {
           case 'O':
             if (isEmpty(x, y)) {
-              makeObstacle(x, y);
+              obstacle = [];
+              flood(obstacle, 'obstacle', 'O', x, y);
+              obstacles.push(obstacle);
             }
             break;
           case 'X':
             head = { x: x, y: y };
-          case 'x':
-            ++snakeLength;
+            break;
+          case '.':
+            break;
         }
       }
     }
-    snake = new Array(snakeLength);
-    floodSnake(snakeLength - 1, head.x, head.y);
+
+    snake = [];
+    flood(snake, 'snake', 'x', head.x, head.y);
+    snake.reverse();
     previousTail = snake[0];
     neck = snake[snake.length - 2];
     direction = previousDirection = calculateDirection(neck.x, neck.y,
         head.x, head.y);
-    /*
-    start = {
-      length: 3,
-      direction: 'east',
-      x: 1, y: 1
-    };
-    direction = previousDirection = start.direction;
-    snake = new Array(start.length);
-    snake[snake.length - 1] = {
-      x: start.x + displace.x[direction],
-      y: start.y + displace.y[direction]
-    };
-    snake[snake.length - 2] = {
-      x: start.x,
-      y: start.y
-    };
-    for (i = snake.length - 3; i >= 0; --i) {
-      snake[i] = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
-    }
-    previousTail = { x: snake[i + 1].x, y: snake[i + 1].y + 1 };
-    for (i = snake.length - 1; i >= 0; --i) {
-      putItem(snake[i].x, snake[i].y, { kind: 'snake' });
-    }
-    for (i = 0; i < numFood; ++i) {
-      placeFood();
-    }
-    */
   }
 
   function chooseFreeCell() {
@@ -755,6 +709,10 @@ var Snake = (function () {
         element.className += ' backward';
         return;
       }
+      if (action == previousDirection) {
+        element.className += ' forward';
+        return;
+      }
       if (tick.action) {
         actions.queue[actions.queue.length - 2].element.className +=
             ' overridden';
@@ -771,6 +729,7 @@ var Snake = (function () {
   function startGame() {
     startGameButton.disabled = true;
     actions.queue = [];
+    actions.box.innerHTML = '';
     setMessage('');
     loadLevel(0);
     prepareCanvas();

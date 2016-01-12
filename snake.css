@@ -47,7 +47,10 @@ button, #messageBox, #actionBox {
   transform: rotate(0.50turn);
 }
 .action.backward .arrow {
-  color: #ddd;
+  color: #eee;
+}
+.action.forward .arrow {
+  color: #bbb;
 }
 .action.overridden .arrow {
   color: #f8898c;
