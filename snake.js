@@ -632,7 +632,6 @@ var Snake = (function () {
 
     while (actions.queue.length > 0) {
       item = actions.queue.shift();
-      actions.box.removeChild(item.element);
       if (item.direction !== opposite[direction]) {
         direction = item.direction;
         break;
@@ -704,8 +703,7 @@ var Snake = (function () {
   }
 
   function keyDownHandler(event) {
-    var action,
-        element;
+    var action;
     if (event.keyCode in keyCodeToAction) {
       action = keyCodeToAction[event.keyCode];
       if (action === 'pause') {
@@ -713,12 +711,7 @@ var Snake = (function () {
         return;
       }
       // Currently the only actions are pause and the four directions.
-      element = document.createElement('div');
-      element.className = 'action ' + action;
-      element.innerHTML = '<span class="arrow">&#x2794;</span>' +
-          '<span class="tick">' + tick.count + '</span>';
-      actions.box.appendChild(element);
-      actions.queue.push({ direction: action, element: element });
+      actions.queue.push({ direction: action });
     }
   }
 
@@ -729,7 +722,6 @@ var Snake = (function () {
   function startGame() {
     startGameButton.disabled = true;
     actions.queue = [];
-    actions.box.innerHTML = '';
     setMessage('');
     loadLevel(0);
     prepareCanvas();
@@ -758,7 +750,6 @@ var Snake = (function () {
     window.onkeydown = keyDownHandler.bind(this);
 
     messageBox = document.getElementById('messageBox');
-    actions.box = document.getElementById('actionBox');
     startGameButton = document.getElementById('startGameButton');
     startGameButton.onclick = startGame.bind(this);
     pauseGameButton = document.getElementById('pauseGameButton');

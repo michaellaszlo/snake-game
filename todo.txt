@@ -6,9 +6,10 @@ levels
 - vanishing food
 - final level
 
-nav assist?
+nav assist
 - next cell
 - grid lines
+- queued moves on grid
 
 better graphics
 - contiguous obstacles
