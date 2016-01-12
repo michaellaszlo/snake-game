@@ -2,7 +2,7 @@
 action queue
 
 levels
-- random food
++ uniform random food
 - fixed progressive food
 - vanishing food
 - final level
@@ -12,6 +12,11 @@ better graphics
 - randomized walls
 - hug wall?
 - stripe?
+
+improved food placement
+- precalculate impossible food placement
+- place beyond a given radius when possible
+- dynamically assess placement difficulty?
 
 progression graphics
 

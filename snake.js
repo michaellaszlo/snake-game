@@ -11,18 +11,19 @@ var Snake = (function () {
       previousTail,
       levels = [
         {
-          map: [ '..   .  ....',
-                 '..   .    O.',
-                 '  OO .  .. .',
-                 '  O.    .. .',
-                 '     ..O    ',
-                 '..xX....  ..',
-                 '..x ....  ..',
-                 '  x O..     ',
-                 '. ..    .O  ',
-                 '. ..  . OO  ',
-                 '.O    .   ..',
-                 '....  .   ..' ]
+          map: [ '            ',
+                 '          O ',
+                 '  OO        ',
+                 '  O         ',
+                 '       O    ',
+                 '  xX        ',
+                 '  x         ',
+                 '  x O       ',
+                 '         O  ',
+                 '        OO  ',
+                 ' O          ',
+                 '            ' ],
+          numFood: 1
         },
       ],
       size = {
@@ -38,6 +39,7 @@ var Snake = (function () {
         obstacle: { fill: '#abaa8b', stroke: '#868477' },
         snake: { body: '#2255a2', head: '#0f266b', eyes: '#45575e' }
       },
+      numFood,
       foodList,
       obstacles,
       pi = Math.PI,
@@ -144,7 +146,7 @@ var Snake = (function () {
   function loadLevel(levelIndex) {
     var level = levels[levelIndex],
         map = level.map,
-        obstacle,
+        group,
         head, neck,
         x, y;
     numRows = map.length;
@@ -172,18 +174,28 @@ var Snake = (function () {
         switch (map[y][x]) {
           case 'O':
             if (isEmpty(x, y)) {
-              obstacle = [];
-              flood(obstacle, 'obstacle', 'O', x, y);
-              obstacles.push(obstacle);
+              group = [];
+              flood(group, 'obstacle', 'O', x, y);
+              obstacles.push(group);
             }
             break;
           case 'X':
             head = { x: x, y: y };
             break;
           case '.':
+            if (isEmpty(x, y)) {
+              group = [];
+              flood(group, 'temporary', '.', x, y);
+            }
             break;
         }
       }
+    }
+
+    numFood = 0;
+    while (numFood < level.numFood) {
+      placeFood();
+      ++numFood;
     }
 
     snake = [];
@@ -215,6 +227,10 @@ var Snake = (function () {
         }
       }
     }
+  }
+
+  function removeFood(foodNode) {
+    deleteFromList(foodList, foodNode);
   }
 
   function placeFood() {
@@ -662,7 +678,7 @@ var Snake = (function () {
       snake.unshift(tail);
       putItem(tail.x, tail.y, { kind: 'snake' });
       setMessage(snake.length + ' segments');
-      deleteFromList(foodList, item.node);
+      removeFood(item.node);
       placeFood();
     }
     paintCanvas(0);
