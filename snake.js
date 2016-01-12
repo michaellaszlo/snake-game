@@ -60,11 +60,11 @@ var Snake = (function () {
         x: { north: 0, east: 1, south: 0, west: -1 },
         y: { north: -1, east: 0, south: 1, west: 0 }
       },
-      actionToKeyCode = {  // Codes for arrow keys and W-A-S-D.
-        north: [38, 87],
-        east: [39, 68],
-        south: [40, 83],
-        west: [37, 65],
+      actionToKeyCode = {  // Codes for arrow keys, WASD, and IJKL.
+        north: [38, 87, 73],
+        east: [39, 68, 76],
+        south: [40, 83, 75],
+        west: [37, 65, 74],
         pause: [32, 16, 13]
       },
       keyCodeToAction,
@@ -181,12 +181,6 @@ var Snake = (function () {
             break;
           case 'X':
             head = { x: x, y: y };
-            break;
-          case '.':
-            if (isEmpty(x, y)) {
-              group = [];
-              flood(group, 'temporary', '.', x, y);
-            }
             break;
         }
       }
@@ -634,8 +628,16 @@ var Snake = (function () {
       return;
     }
     ++tick.count;
-    delete tick.action;
     tick.start = Date.now();
+
+    while (actions.queue.length > 0) {
+      item = actions.queue.shift();
+      actions.box.removeChild(item.element);
+      if (item.direction !== opposite[direction]) {
+        direction = item.direction;
+        break;
+      }
+    }
 
     // Chop off the tail and make a new head.
     previousTail = tail = snake.shift();
@@ -712,29 +714,11 @@ var Snake = (function () {
       }
       // Currently the only actions are pause and the four directions.
       element = document.createElement('div');
-      if (actions.queue.length == actions.maxQueueLength) {
-        actions.box.removeChild(actions.queue[0].element);
-        actions.queue.shift();
-      }
-      actions.queue.push({ element: element });
       element.className = 'action ' + action;
       element.innerHTML = '<span class="arrow">&#x2794;</span>' +
           '<span class="tick">' + tick.count + '</span>';
       actions.box.appendChild(element);
-      if (action == opposite[previousDirection]) {
-        element.className += ' backward';
-        return;
-      }
-      if (action == previousDirection) {
-        element.className += ' forward';
-        return;
-      }
-      if (tick.action) {
-        actions.queue[actions.queue.length - 2].element.className +=
-            ' overridden';
-      }
-      tick.action = action;
-      direction = action;
+      actions.queue.push({ direction: action, element: element });
     }
   }
 

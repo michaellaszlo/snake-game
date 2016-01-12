@@ -1,11 +1,14 @@
 
-action queue
-
 levels
 + uniform random food
+- target length
 - fixed progressive food
 - vanishing food
 - final level
+
+nav assist?
+- next cell
+- grid lines
 
 better graphics
 - contiguous obstacles
