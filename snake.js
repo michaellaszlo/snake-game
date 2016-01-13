@@ -10,8 +10,7 @@ var Snake = (function () {
       snake,
       previousTail,
       levels = [
-        {
-          map: [ '            ',
+        { map: [ '            ',
                  '          O ',
                  '  OO        ',
                  '  O         ',
@@ -23,9 +22,29 @@ var Snake = (function () {
                  '        OO  ',
                  ' O          ',
                  '            ' ],
-          numFood: 1
+          numFood: 1,
+          targetLength: 6
         },
+        { map: [ '      O  O  ',
+                 ' O          ',
+                 '       O  O ',
+                 ' O  O       ',
+                 '          O ',
+                 '    O  O    ',
+                 '            ',
+                 '  O    O  O ',
+                 '            ',
+                 '    O     O ',
+                 '     X      ',
+                 '   xxx      ' ],
+          numFood: 1,
+          targetLength: 7
+        }
       ],
+      level,
+      levelIndex,
+      direction,
+      previousDirection,
       size = {
         cell: 24,
         wall: 5
@@ -76,8 +95,6 @@ var Snake = (function () {
       messageBox,
       startGameButton,
       pauseGameButton,
-      direction,
-      previousDirection,
       status = {};
 
   function pauseGame() {
@@ -143,12 +160,14 @@ var Snake = (function () {
     return true;
   }
 
-  function loadLevel(levelIndex) {
-    var level = levels[levelIndex],
-        map = level.map,
+  function loadLevel(newLevelIndex) {
+    var map,
         group,
         head, neck,
         x, y;
+    levelIndex = newLevelIndex;
+    level = levels[levelIndex];
+    map = level.map;
     numRows = map.length;
     numCols = map[0].length;
     clearGrid();
@@ -674,14 +693,20 @@ var Snake = (function () {
     wipeCell(head.x, head.y);
     putItem(head.x, head.y, { kind: 'snake' });
 
-    // If the cell contained food, reattach the tail and place new food.
+    // If there is food: remove food, reattach tail, check level target.
     if (item.kind === 'food') {
+      removeFood(item.node);
       snake.unshift(tail);
       putItem(tail.x, tail.y, { kind: 'snake' });
       setMessage(snake.length + ' segments');
-      removeFood(item.node);
+      if (snake.length == level.targetLength) {
+        loadLevel((levelIndex + 1) % levels.length);
+        window.requestAnimationFrame(gameStep);
+        return;
+      }
       placeFood();
     }
+
     paintCanvas(0);
     window.requestAnimationFrame(gameStep);
   }
