@@ -4,8 +4,8 @@ var Snake = (function () {
         span: 1000 / hertz
       },
       duration = {
-        prologue: 1,
-        epilogue: 1
+        prologue: 0.5,
+        epilogue: 0.5
       },
       numRows,
       numCols,
@@ -751,12 +751,26 @@ var Snake = (function () {
   }
 
   function nextLevel() {
+    var fadeStart;
+    function fadeIn() {
+      var seconds = (Date.now() - fadeStart) / 1000;
+      if (seconds >= duration.prologue) {
+        canvas.style.opacity = 1;
+        status.running = true;
+        tick.count = 0;
+        tick.start = Date.now();// - tick.span;
+        gameStep();
+      } else {
+        canvas.style.opacity = seconds / duration.prologue;
+        paintCanvas(0);
+        window.requestAnimationFrame(fadeIn);
+      }
+    }
     levelIndex = (levelIndex + 1) % levels.length;
     loadLevel(levelIndex);
-    status.running = true;
-    tick.count = 0;
-    tick.start = Date.now() - tick.span;
-    gameStep();
+    canvas.style.opacity = 0;
+    fadeStart = Date.now();
+    fadeIn();
   }
 
   function startGame() {

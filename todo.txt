@@ -1,6 +1,6 @@
 
 level transition
-- fade in
++ fade in
 - speed up
 - slow down
 - fade out
