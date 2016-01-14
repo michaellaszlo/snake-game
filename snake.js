@@ -219,6 +219,8 @@ var Snake = (function () {
     neck = snake[snake.length - 2];
     direction = previousDirection = calculateDirection(neck.x, neck.y,
         head.x, head.y);
+
+    prepareCanvas();
   }
 
   function chooseFreeCell() {
@@ -701,8 +703,8 @@ var Snake = (function () {
       putItem(tail.x, tail.y, { kind: 'snake' });
       setMessage(snake.length + ' segments');
       if (snake.length == level.targetLength) {
-        loadLevel((levelIndex + 1) % levels.length);
-        window.requestAnimationFrame(gameStep);
+        status.running = false;
+        nextLevel();
         return;
       }
       placeFood();
@@ -748,16 +750,21 @@ var Snake = (function () {
     messageBox.innerHTML = message;
   }
 
-  function startGame() {
-    startGameButton.disabled = true;
-    actions.queue = [];
-    setMessage('');
-    loadLevel(0);
-    prepareCanvas();
+  function nextLevel() {
+    levelIndex = (levelIndex + 1) % levels.length;
+    loadLevel(levelIndex);
     status.running = true;
     tick.count = 0;
     tick.start = Date.now() - tick.span;
     gameStep();
+  }
+
+  function startGame() {
+    startGameButton.disabled = true;
+    actions.queue = [];
+    setMessage('');
+    levelIndex = -1;
+    nextLevel();
     pauseGameButton.style.display = 'inline';
   }
 
