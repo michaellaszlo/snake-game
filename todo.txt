@@ -1,7 +1,16 @@
 
+level transition
+- fade in
+- speed up
+- slow down
+- fade out
+
+level graphics
+- length target
+- current level
+
 levels
-+ uniform random food
-- target length
+- uniformly random food
 - fixed progressive food
 - vanishing food
 - final level
@@ -14,6 +23,8 @@ nav assist
 better graphics
 - contiguous obstacles
 - randomized walls
+- animated collision
+- animated eating
 - hug wall?
 - stripe?
 
@@ -21,8 +32,6 @@ improved food placement
 - precalculate impossible food placement
 - place beyond a given radius when possible
 - dynamically assess placement difficulty?
-
-progression graphics
 
 help graphics
 

@@ -3,6 +3,10 @@ var Snake = (function () {
       tick = {
         span: 1000 / hertz
       },
+      duration = {
+        prologue: 1,
+        epilogue: 1
+      },
       numRows,
       numCols,
       grid,
@@ -98,15 +102,12 @@ var Snake = (function () {
       status = {};
 
   function pauseGame() {
-    if (!status.playing) {
-      return;
-    }
-    if (!status.paused) {
-      status.paused = true;
+    if (status.running) {
+      status.running = false;
       tick.paused = Date.now() - tick.start;
       pauseGameButton.innerHTML = 'resume';
     } else {
-      status.paused = false;
+      status.running = true;
       pauseGameButton.innerHTML = 'pause';
       tick.start = Date.now() - tick.paused;
       gameStep();
@@ -637,7 +638,7 @@ var Snake = (function () {
         head, tail,
         item, i;
 
-    if (!status.playing || status.paused) {
+    if (!status.running) {
       return;
     }
     elapsed = Date.now() - tick.start;
@@ -720,7 +721,7 @@ var Snake = (function () {
   }
 
   function stopGame(message) {
-    status.playing = false;
+    status.running = false;
     finalAnimation();
     setMessage(message + '<br> ended with ' + snake.length + ' segments');
     startGameButton.disabled = false;
@@ -733,6 +734,9 @@ var Snake = (function () {
       action = keyCodeToAction[event.keyCode];
       if (action === 'pause') {
         pauseGame();
+        return;
+      }
+      if (!status.running) {
         return;
       }
       // Currently the only actions are pause and the four directions.
@@ -750,8 +754,7 @@ var Snake = (function () {
     setMessage('');
     loadLevel(0);
     prepareCanvas();
-    status.playing = true;
-    status.paused = false;
+    status.running = true;
     tick.count = 0;
     tick.start = Date.now() - tick.span;
     gameStep();
