@@ -4,8 +4,8 @@ var Snake = (function () {
         span: 1000 / hertz
       },
       duration = {
-        prologue: 0.1,
-        epilogue: 0.5
+        prologue: 0.25,
+        epilogue: 0.75
       },
       numRows,
       numCols,
@@ -27,7 +27,7 @@ var Snake = (function () {
                  ' O          ',
                  '            ' ],
           numFood: 1,
-          targetLength: 6
+          targetLength: 5
         },
         { map: [ '      O  O  ',
                  ' O          ',
@@ -42,7 +42,7 @@ var Snake = (function () {
                  '     X      ',
                  '   xxx      ' ],
           numFood: 1,
-          targetLength: 7
+          targetLength: 5
         }
       ],
       level,
@@ -94,6 +94,7 @@ var Snake = (function () {
       actions = {
         maxQueueLength: 10
       },
+      events = {},
       canvas,
       context,
       messageBox,
@@ -639,24 +640,29 @@ var Snake = (function () {
   function gameStep() {
     var elapsed,
         head, tail,
-        item, i;
+        event, action, item, i;
 
     if (!status.running) {
       return;
     }
+
+    // If we're midway through the tick, only perform animation.
     elapsed = Date.now() - tick.start;
     if (elapsed < tick.span) {
       paintCanvas(elapsed / tick.span);
       window.requestAnimationFrame(gameStep);
       return;
     }
-    ++tick.count;
-    tick.start = Date.now();
 
+    // Offset the tick start by the amount we went over the span.
+    tick.start = Date.now() - Math.min(elapsed - tick.span, tick.span / 10);
+    ++tick.count;
+
+    // Perform the first valid action in the queue.
     while (actions.queue.length > 0) {
-      item = actions.queue.shift();
-      if (item.direction !== opposite[direction]) {
-        direction = item.direction;
+      action = actions.queue.shift();
+      if (action.direction !== opposite[direction]) {
+        direction = action.direction;
         break;
       }
     }
@@ -671,6 +677,15 @@ var Snake = (function () {
     };
     previousDirection = direction;
     snake.push(head);
+
+    // Process events that were queued during the previous tick.
+    while (events.queue.length > 0) {
+      event = events.queue.shift();
+      event.fun();
+      if (event.interrupt) {
+        return;
+      }
+    }
 
     // Check for wall collision.
     if (head.x < 0 || head.x >= numCols ||
@@ -704,10 +719,10 @@ var Snake = (function () {
       putItem(tail.x, tail.y, { kind: 'snake' });
       setMessage(snake.length + ' segments');
       if (snake.length == level.targetLength) {
-        endLevel();
-        return;
+        events.queue.push({ fun: endLevel, interrupt: true });
+      } else {
+        events.queue.push({ fun: placeFood });
       }
-      placeFood();
     }
 
     paintCanvas(0);
@@ -756,6 +771,9 @@ var Snake = (function () {
       var seconds = (Date.now() - fadeStart) / 1000;
       if (seconds >= duration.prologue) {
         canvas.style.opacity = 1;
+        setMessage('');
+        actions.queue = [];
+        events.queue = [];
         status.running = true;
         tick.count = 0;
         tick.start = Date.now() - tick.span;
@@ -792,8 +810,6 @@ var Snake = (function () {
 
   function startGame() {
     startGameButton.disabled = true;
-    actions.queue = [];
-    setMessage('');
     levelIndex = -1;
     nextLevel();
     pauseGameButton.style.display = 'inline';

@@ -22,12 +22,12 @@ nav assist
 - queued moves on grid
 
 better graphics
+- animated eating
 - contiguous obstacles
 - randomized walls
 - animated collision
-- animated eating
-- hug wall?
 - stripe?
+- hug wall?
 
 improved food placement
 - precalculate impossible food placement
