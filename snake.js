@@ -758,11 +758,11 @@ var Snake = (function () {
         canvas.style.opacity = 1;
         status.running = true;
         tick.count = 0;
-        tick.start = Date.now();// - tick.span;
+        tick.start = Date.now() - tick.span;
         gameStep();
       } else {
         canvas.style.opacity = seconds / duration.prologue;
-        paintCanvas(0);
+        paintCanvas(0.99999);
         window.requestAnimationFrame(fadeIn);
       }
     }
@@ -770,6 +770,7 @@ var Snake = (function () {
     loadLevel(levelIndex);
     canvas.style.opacity = 0;
     fadeStart = Date.now();
+    console.log(JSON.stringify(snake));
     fadeIn();
   }
 
