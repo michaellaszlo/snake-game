@@ -27,7 +27,7 @@ var Snake = (function () {
                  ' O          ',
                  '            ' ],
           numFood: 1,
-          targetLength: 5
+          targetLength: 9
         },
         { map: [ '      O  O  ',
                  ' O          ',
@@ -42,7 +42,7 @@ var Snake = (function () {
                  '     X      ',
                  '   xxx      ' ],
           numFood: 1,
-          targetLength: 5
+          targetLength: 9
         }
       ],
       level,
@@ -714,14 +714,16 @@ var Snake = (function () {
 
     // If there is food: remove food, reattach tail, check level target.
     if (item.kind === 'food') {
-      removeFood(item.node);
       snake.unshift(tail);
       putItem(tail.x, tail.y, { kind: 'snake' });
       setMessage(snake.length + ' segments');
       if (snake.length == level.targetLength) {
         events.queue.push({ fun: endLevel, interrupt: true });
       } else {
-        events.queue.push({ fun: placeFood });
+        events.queue.push({ fun: function () {
+          removeFood(item.node);
+          placeFood();
+        }});
       }
     }
 
