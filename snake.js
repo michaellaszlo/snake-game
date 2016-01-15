@@ -4,7 +4,7 @@ var Snake = (function () {
         span: 1000 / hertz
       },
       duration = {
-        prologue: 0.5,
+        prologue: 0.1,
         epilogue: 0.5
       },
       numRows,
@@ -166,14 +166,6 @@ var Snake = (function () {
         group,
         head, neck,
         x, y;
-    levelIndex = newLevelIndex;
-    level = levels[levelIndex];
-    map = level.map;
-    numRows = map.length;
-    numCols = map[0].length;
-    clearGrid();
-    foodList = newList();
-    obstacles = [];
 
     function flood(stack, kind, ch, x, y) {
       var i, X, Y;
@@ -188,6 +180,14 @@ var Snake = (function () {
         }
       }
     }
+
+    levelIndex = newLevelIndex;
+    level = levels[levelIndex];
+    map = level.map;
+    numRows = map.length;
+    numCols = map[0].length;
+    clearGrid();
+    obstacles = [];
 
     for (y = 0; y < numRows; ++y) {
       for (x = 0; x < numCols; ++x) {
@@ -206,12 +206,6 @@ var Snake = (function () {
       }
     }
 
-    numFood = 0;
-    while (numFood < level.numFood) {
-      placeFood();
-      ++numFood;
-    }
-
     snake = [];
     flood(snake, 'snake', 'x', head.x, head.y);
     snake.reverse();
@@ -219,6 +213,13 @@ var Snake = (function () {
     neck = snake[snake.length - 2];
     direction = previousDirection = calculateDirection(neck.x, neck.y,
         head.x, head.y);
+
+    foodList = newList();
+    numFood = 0;
+    while (numFood < level.numFood) {
+      placeFood();
+      ++numFood;
+    }
 
     prepareCanvas();
   }
