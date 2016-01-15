@@ -703,8 +703,7 @@ var Snake = (function () {
       putItem(tail.x, tail.y, { kind: 'snake' });
       setMessage(snake.length + ' segments');
       if (snake.length == level.targetLength) {
-        status.running = false;
-        nextLevel();
+        endLevel();
         return;
       }
       placeFood();
@@ -770,8 +769,24 @@ var Snake = (function () {
     loadLevel(levelIndex);
     canvas.style.opacity = 0;
     fadeStart = Date.now();
-    console.log(JSON.stringify(snake));
     fadeIn();
+  }
+
+  function endLevel() {
+    var fadeStart;
+    function fadeOut() {
+      var seconds = (Date.now() - fadeStart) / 1000;
+      if (seconds >= duration.prologue) {
+        nextLevel();
+      } else {
+        canvas.style.opacity = 1 - seconds / duration.epilogue;
+        paintCanvas(0);
+        window.requestAnimationFrame(fadeOut);
+      }
+    }
+    status.running = false;
+    fadeStart = Date.now();
+    fadeOut();
   }
 
   function startGame() {

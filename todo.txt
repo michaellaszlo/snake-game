@@ -1,9 +1,10 @@
 
 level transition
 + fade in
-- speed up
-- slow down
-- fade out
++ fade out
+- intermission
+- speed up at start
+- slow down at end
 
 level graphics
 - length target
