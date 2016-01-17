@@ -105,10 +105,12 @@ var Snake = (function () {
   function pauseGame() {
     if (status.running) {
       status.running = false;
+      status.paused = true;
       tick.paused = Date.now() - tick.start;
       pauseGameButton.innerHTML = 'resume';
     } else {
       status.running = true;
+      status.paused = false;
       pauseGameButton.innerHTML = 'pause';
       tick.start = Date.now() - tick.paused;
       gameStep();
@@ -756,6 +758,9 @@ var Snake = (function () {
         return;
       }
       if (!status.running) {
+        if (!status.paused && action === 'north') {
+          startGame();
+        }
         return;
       }
       // Currently the only actions are pause and the four directions.
