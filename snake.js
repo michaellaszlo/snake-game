@@ -103,14 +103,15 @@ var Snake = (function () {
       status = {};
 
   function pauseGame() {
-    if (status.running) {
-      status.running = false;
-      status.paused = true;
+    if (!status.gameInProgress || status.noLevelActive) {
+      return;
+    }
+    if (!status.pausedByUser) {
+      status.pausedByUser = true;
       tick.paused = Date.now() - tick.start;
       pauseGameButton.innerHTML = 'resume';
     } else {
-      status.running = true;
-      status.paused = false;
+      status.pausedByUser = false;
       pauseGameButton.innerHTML = 'pause';
       tick.start = Date.now() - tick.paused;
       gameStep();
@@ -644,7 +645,7 @@ var Snake = (function () {
         head, tail,
         event, action, item, i;
 
-    if (!status.running) {
+    if (!status.gameInProgress || status.pausedByUser) {
       return;
     }
 
@@ -742,7 +743,7 @@ var Snake = (function () {
   }
 
   function stopGame(message) {
-    status.running = false;
+    status.gameInProgress = false;
     finalAnimation();
     setMessage(message + '<br> ended with ' + snake.length + ' segments');
     startGameButton.disabled = false;
@@ -757,8 +758,11 @@ var Snake = (function () {
         pauseGame();
         return;
       }
-      if (!status.running) {
-        if (!status.paused && action === 'north') {
+      if (status.pausedByUser) {
+        return;
+      }
+      if (!status.gameInProgress) {
+        if (action === 'north') {
           startGame();
         }
         return;
@@ -781,7 +785,7 @@ var Snake = (function () {
         setMessage('');
         actions.queue = [];
         events.queue = [];
-        status.running = true;
+        status.gameInProgress = true;
         tick.count = 0;
         tick.start = Date.now() - tick.span;
         gameStep();
@@ -810,7 +814,7 @@ var Snake = (function () {
         window.requestAnimationFrame(fadeOut);
       }
     }
-    status.running = false;
+    status.gameInProgress = false;
     fadeStart = Date.now();
     fadeOut();
   }
