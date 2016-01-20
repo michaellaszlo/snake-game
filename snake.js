@@ -27,7 +27,7 @@ var Snake = (function () {
                  ' O          ',
                  '            ' ],
           numFood: 1,
-          targetLength: 9
+          targetLength: 30
         },
         { map: [ '      O  O  ',
                  ' O          ',
@@ -42,7 +42,7 @@ var Snake = (function () {
                  '     X      ',
                  '   xxx      ' ],
           numFood: 1,
-          targetLength: 9
+          targetLength: 33
         }
       ],
       level,
@@ -229,6 +229,9 @@ var Snake = (function () {
       ++numFood;
     }
 
+    // Level title.
+    container.currentLevel.innerHTML = 'Level ' + (levelIndex + 1);
+    
     // Level target.
     container.levelTarget.innerHTML = '';
     for (i = 0; i < level.targetLength; ++i) {
@@ -859,6 +862,7 @@ var Snake = (function () {
     }
     window.onkeydown = keyDownHandler.bind(this);
 
+    container.currentLevel = document.getElementById('currentLevel');
     container.levelTarget = document.getElementById('levelTarget');
     container.message = document.getElementById('message');
     startGameButton = document.getElementById('startGameButton');

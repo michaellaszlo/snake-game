@@ -7,7 +7,7 @@ level transition
 - slow down at end
 
 level graphics
-- length target
++ length target
 - current level
 
 levels
