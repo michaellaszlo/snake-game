@@ -12,14 +12,17 @@ button, #levelTarget, #message, #actionBox {
   margin-top: 15px;
 }
 #message {
-  line-height: 24px;
 }
 
 #levelTarget .segment {
-  color: #e1a49c;
+  font-family: monospace;
+  font-size: 25px;
+  padding: 0;
+  color: #2e607f;
+  margin-right: 1px;
 }
 #levelTarget .achieved {
-  color: #2f60a8;
+  color: #b6c7ce;
 }
 
 #actionBox {

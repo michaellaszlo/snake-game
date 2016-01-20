@@ -235,7 +235,7 @@ var Snake = (function () {
       element = document.createElement('span');
       element.innerHTML = '&#x25a0;';
       element.className = 'segment';
-      if (i < snake.length) {
+      if (level.targetLength - i <= snake.length) {
         element.className += ' achieved';
       }
       container.levelTarget.appendChild(element);
@@ -735,6 +735,8 @@ var Snake = (function () {
     if (item.kind === 'food') {
       snake.unshift(tail);
       putItem(tail.x, tail.y, { kind: 'snake' });
+      container.levelTarget.children[level.targetLength - snake.length].
+          className += ' achieved';
       if (snake.length == level.targetLength) {
         events.queue.push({ fun: endLevel, interrupt: true });
       } else {
