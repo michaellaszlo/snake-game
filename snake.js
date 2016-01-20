@@ -97,9 +97,9 @@ var Snake = (function () {
       events = {},
       canvas,
       context,
-      messageBox,
       startGameButton,
       pauseGameButton,
+      container = {},
       status = {};
 
   function pauseGame() {
@@ -169,7 +169,8 @@ var Snake = (function () {
     var map,
         group,
         head, neck,
-        x, y;
+        element,
+        x, y, i;
 
     function flood(stack, kind, ch, x, y) {
       var i, X, Y;
@@ -191,8 +192,9 @@ var Snake = (function () {
     numRows = map.length;
     numCols = map[0].length;
     clearGrid();
-    obstacles = [];
 
+    // Obstacle components.
+    obstacles = [];
     for (y = 0; y < numRows; ++y) {
       for (x = 0; x < numCols; ++x) {
         switch (map[y][x]) {
@@ -210,6 +212,7 @@ var Snake = (function () {
       }
     }
 
+    // Snake.
     snake = [];
     flood(snake, 'snake', 'x', head.x, head.y);
     snake.reverse();
@@ -218,11 +221,24 @@ var Snake = (function () {
     direction = previousDirection = calculateDirection(neck.x, neck.y,
         head.x, head.y);
 
+    // Food.
     foodList = newList();
     numFood = 0;
     while (numFood < level.numFood) {
       placeFood();
       ++numFood;
+    }
+
+    // Level target.
+    container.levelTarget.innerHTML = '';
+    for (i = 0; i < level.targetLength; ++i) {
+      element = document.createElement('span');
+      element.innerHTML = '&#x25a0;';
+      element.className = 'segment';
+      if (i < snake.length) {
+        element.className += ' achieved';
+      }
+      container.levelTarget.appendChild(element);
     }
 
     prepareCanvas();
@@ -719,7 +735,6 @@ var Snake = (function () {
     if (item.kind === 'food') {
       snake.unshift(tail);
       putItem(tail.x, tail.y, { kind: 'snake' });
-      setMessage(snake.length + ' segments');
       if (snake.length == level.targetLength) {
         events.queue.push({ fun: endLevel, interrupt: true });
       } else {
@@ -745,7 +760,7 @@ var Snake = (function () {
   function stopGame(message) {
     status.gameInProgress = false;
     finalAnimation();
-    setMessage(message + '<br> ended with ' + snake.length + ' segments');
+    setMessage(message);
     startGameButton.disabled = false;
     pauseGameButton.style.display = 'none';
   }
@@ -773,7 +788,7 @@ var Snake = (function () {
   }
 
   function setMessage(message) {
-    messageBox.innerHTML = message;
+    container.message.innerHTML = message;
   }
 
   function nextLevel() {
@@ -842,7 +857,8 @@ var Snake = (function () {
     }
     window.onkeydown = keyDownHandler.bind(this);
 
-    messageBox = document.getElementById('messageBox');
+    container.levelTarget = document.getElementById('levelTarget');
+    container.message = document.getElementById('message');
     startGameButton = document.getElementById('startGameButton');
     startGameButton.onclick = startGame.bind(this);
     pauseGameButton = document.getElementById('pauseGameButton');
