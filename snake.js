@@ -27,7 +27,7 @@ var Snake = (function () {
                  ' O          ',
                  '            ' ],
           numFood: 1,
-          targetLength: 30
+          targetLength: 10
         },
         { map: [ '      O  O  ',
                  ' O          ',
@@ -42,11 +42,14 @@ var Snake = (function () {
                  '     X      ',
                  '   xxx      ' ],
           numFood: 1,
-          targetLength: 33
+          targetLength: 10
         }
       ],
       level,
       levelIndex,
+      lives = {
+        initial: 3
+      },
       direction,
       previousDirection,
       size = {
@@ -712,21 +715,21 @@ var Snake = (function () {
     // Check for wall collision.
     if (head.x < 0 || head.x >= numCols ||
         head.y < 0 || head.y >= numRows) {
-      stopGame('wall collision');
+      fail('wall collision');
       return;
     }
 
     // Check for head colliding with body.
     item = getItem(head.x, head.y);
     if (item.kind === 'snake') {
-      stopGame('self-collision');
+      fail('self-collision');
       return;
     }
 
     // Check for head colliding with obstacle.
     item = getItem(head.x, head.y);
     if (item.kind === 'obstacle') {
-      stopGame('obstacle collision');
+      fail('obstacle collision');
       return;
     }
 
@@ -762,10 +765,21 @@ var Snake = (function () {
     }
   }
 
+  function fail(message) {
+    lives.current -= 1;
+    if (lives.current == 0) {
+      setMessage(message + '<br> game over');
+      stopGame(message);
+    } else {
+      setMessage(message);
+      displayLives();
+      endLevel();
+    }
+  }
+
   function stopGame(message) {
     status.gameInProgress = false;
     finalAnimation();
-    setMessage(message);
     startGameButton.disabled = false;
     pauseGameButton.style.display = 'none';
   }
@@ -796,7 +810,7 @@ var Snake = (function () {
     container.message.innerHTML = message;
   }
 
-  function nextLevel() {
+  function startLevel() {
     var fadeStart;
     function fadeIn() {
       var seconds = (Date.now() - fadeStart) / 1000;
@@ -815,7 +829,6 @@ var Snake = (function () {
         window.requestAnimationFrame(fadeIn);
       }
     }
-    levelIndex = (levelIndex + 1) % levels.length;
     loadLevel(levelIndex);
     canvas.style.opacity = 0;
     fadeStart = Date.now();
@@ -827,7 +840,7 @@ var Snake = (function () {
     function fadeOut() {
       var seconds = (Date.now() - fadeStart) / 1000;
       if (seconds >= duration.prologue) {
-        nextLevel();
+        startLevel();
       } else {
         canvas.style.opacity = 1 - seconds / duration.epilogue;
         paintCanvas(0);
@@ -839,10 +852,16 @@ var Snake = (function () {
     fadeOut();
   }
 
+  function displayLives() {
+    container.spareLives.innerHTML = (lives.current - 1) + ' spare lives';
+  }
+
   function startGame() {
     startGameButton.disabled = true;
-    levelIndex = -1;
-    nextLevel();
+    lives.current = lives.initial;
+    displayLives();
+    levelIndex = 0;
+    startLevel();
     pauseGameButton.style.display = 'inline';
   }
 
@@ -863,6 +882,7 @@ var Snake = (function () {
     window.onkeydown = keyDownHandler.bind(this);
 
     container.currentLevel = document.getElementById('currentLevel');
+    container.spareLives = document.getElementById('spareLives');
     container.levelTarget = document.getElementById('levelTarget');
     container.message = document.getElementById('message');
     startGameButton = document.getElementById('startGameButton');

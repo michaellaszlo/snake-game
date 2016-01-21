@@ -1,14 +1,12 @@
 
 level transition
-+ fade in
-+ fade out
 - intermission
 - speed up at start
 - slow down at end
 
 level graphics
-+ length target
-- current level
+- improve current level
+- improve level target
 
 levels
 - uniformly random food

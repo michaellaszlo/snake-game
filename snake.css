@@ -7,7 +7,7 @@ body {
   margin-right: 15px;
 }
 
-button, #currentLevel, #levelTarget, #message, #actionBox {
+button, #currentLevel, #spareLives, #levelTarget, #message, #actionBox {
   font-size: 16px;
   margin-top: 15px;
 }
