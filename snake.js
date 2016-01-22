@@ -48,7 +48,7 @@ var Snake = (function () {
       level,
       levelIndex,
       lives = {
-        initial: 3
+        initial: 1
       },
       direction,
       previousDirection,
@@ -168,23 +168,63 @@ var Snake = (function () {
     return true;
   }
 
+  function componentToPolygon(cells) {
+    var inComponent = {},
+        polygon = [],
+        i, cell,
+        x, y, x0, y0;
+    for (x = 0; x < numCols; ++x) {
+      inComponent[x] = {};
+    }
+    // Cache cell locations and find a cell with no northern neighbor.
+    for (i = 0; i < cells.length; ++i) {
+      cell = cells[i];
+      x = cell.x;
+      y = cell.y;
+      inComponent[x][y] = true;
+      if (x0 === undefined && (y == 0 || isEmpty(x, y - 1))) {
+        x0 = x;
+        y0 = y;
+      }
+    }
+    // Follow the border.
+    x = x0;
+    y = y0;
+    while (true) {
+      if (inComponent[x][y - 1] && !inComponent[x - 1][y - 1]) {
+        --y;
+      } else if (inComponent[x][y] && !inComponent[x][y - 1]) {
+        ++x;
+      } else if (inComponent[x - 1][y] && !inComponent[x][y]) {
+        ++y;
+      } else if (inComponent[x - 1][y - 1] && !inComponent[x - 1][y]) {
+        --x;
+      }
+      polygon.push({ x: x, y: y });
+      if (x == x0 && y == y0) {
+        break;
+      }
+    }
+    return polygon;
+  }
+
   function loadLevel(newLevelIndex) {
     var map,
-        group,
+        cells, polygon,
         head, neck,
         element,
         x, y, i;
 
-    function flood(stack, kind, ch, x, y) {
+    function flood(cells, kind, ch, x, y) {
       var i, X, Y;
-      stack.push({ x: x, y: y });
+      cells.push({ x: x, y: y });
       putItem(x, y, { kind: kind });
       for (i = 0; i < 4; ++i) {
         X = x + displace.x[directions[i]];
         Y = y + displace.y[directions[i]];
         if (X >= 0 && X < numCols && Y >= 0 && Y < numRows &&
             map[Y][X] == ch && isEmpty(X, Y)) {
-          flood(stack, kind, ch, X, Y);
+          flood(cells, kind, ch, X, Y);
         }
       }
     }
@@ -203,9 +243,10 @@ var Snake = (function () {
         switch (map[y][x]) {
           case 'O':
             if (isEmpty(x, y)) {
-              group = [];
-              flood(group, 'obstacle', 'O', x, y);
-              obstacles.push(group);
+              cells = [];
+              flood(cells, 'obstacle', 'O', x, y);
+              polygon = componentToPolygon(cells);
+              obstacles.push({ cells: cells, polygon: polygon });
             }
             break;
           case 'X':
@@ -214,6 +255,7 @@ var Snake = (function () {
         }
       }
     }
+    // Extract polygon from component.
 
     // Snake.
     snake = [];
@@ -396,6 +438,7 @@ var Snake = (function () {
         head, neck, tail,
         angle, a,
         tx, x, y,
+        polygon,
         i;
 
     context.fillStyle = color.wall;
@@ -404,11 +447,21 @@ var Snake = (function () {
 
     context.strokeStyle = color.obstacle.stroke;
     context.fillStyle = color.obstacle.fill;
-    obstacles.forEach(function (cells) {
-      cells.forEach(function (cell) {
+    obstacles.forEach(function (obstacle) {
+      /*
+      obstacle.cells.forEach(function (cell) {
         context.fillRect(w + cell.x * s, w + cell.y * s, s, s);
         context.strokeRect(w + cell.x * s, w + cell.y * s, s, s);
       });
+      */
+      polygon = obstacle.polygon;
+      context.beginPath();
+      context.moveTo(w + polygon[polygon.length - 1].x * s,
+                     w + polygon[polygon.length - 1].y * s);
+      polygon.forEach(function (vertex) {
+        context.lineTo(w + vertex.x * s, w + vertex.y * s);
+      });
+      context.fill();
     });
 
     node = foodList.first;

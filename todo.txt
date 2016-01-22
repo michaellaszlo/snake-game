@@ -20,7 +20,7 @@ nav assist
 - queued moves on grid
 
 better graphics
-- contiguous obstacles
++ contiguous obstacles
 - randomized obstacle vertices
 - randomized wall vertices
 - animated collision
@@ -35,6 +35,7 @@ improved food placement
 - place beyond a given radius when possible
 - dynamically assess placement difficulty?
 
-help graphics
-
+explanatory graphics
+- keys
+- action queue
 
