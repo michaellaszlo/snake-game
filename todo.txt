@@ -20,8 +20,6 @@ nav assist
 - queued moves on grid
 
 better graphics
-+ contiguous obstacles
-- randomized obstacle vertices
 - randomized wall vertices
 - animated collision
 - animated eating

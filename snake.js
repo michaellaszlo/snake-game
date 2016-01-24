@@ -174,7 +174,7 @@ var Snake = (function () {
         edge,
         previous, current,
         i, cell,
-        x, y, x0, y0, dx, dy;
+        x, y, x0, y0, dx, dy, dr, angle;
     for (x = 0; x < numCols; ++x) {
       inComponent[x] = {};
     }
@@ -219,6 +219,7 @@ var Snake = (function () {
       }
     }
     // Make corners.
+    dr = 0.05;
     previous = polygon[polygon.length - 1];
     for (i = 0; i < polygon.length; ++i) {
       current = polygon[i];
@@ -226,10 +227,18 @@ var Snake = (function () {
       dy = current.inward.dy + previous.inward.dy;
       dx = Math.min(Math.max(-1, dx), 1);
       dy = Math.min(Math.max(-1, dy), 1);
-      current.corner = { x: current.x + dx * 0.1, y: current.y + dy * 0.1 };
+      // Regular corner.
+      x = current.x + dx * dr;
+      y = current.y + dy * dr;
+      // Random variation.
+      angle = Math.random() * 2 * pi;
+      d = Math.max(Math.random(), Math.random()) * dr;
+      current.corner = {
+        x: x + Math.cos(angle) * d,
+        y: y + Math.sin(angle) * d
+      };
       previous = current;
     }
-    console.log(JSON.stringify(polygon));
     return polygon;
   }
 
@@ -904,7 +913,7 @@ var Snake = (function () {
         window.requestAnimationFrame(fadeIn);
       }
     }
-    levelIndex += 1;
+    levelIndex = (levelIndex + 1) % levels.length;
     loadLevel(levelIndex);
     canvas.style.opacity = 0;
     fadeStart = Date.now();
