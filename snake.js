@@ -60,7 +60,7 @@ var Snake = (function () {
         food: 7
       },
       color = {
-        wall: '#d6d4c6',
+        wall: '#bdbca8',
         food: { fill: '#559d34' },
         obstacle: { fill: '#abaa8b', stroke: '#868477' },
         snake: { body: '#2255a2', head: '#0f266b', eyes: '#45575e' }
@@ -172,7 +172,8 @@ var Snake = (function () {
     var inComponent = {},
         polygon = [],
         i, cell,
-        x, y, x0, y0;
+        x, y, x0, y0,
+        xDiagonal, yDiagonal;
     for (x = 0; x < numCols; ++x) {
       inComponent[x] = {};
     }
@@ -192,15 +193,30 @@ var Snake = (function () {
     y = y0;
     while (true) {
       if (inComponent[x][y - 1] && !inComponent[x - 1][y - 1]) {
+        // North.
         --y;
+        xDiagonal = 1;
+        yDiagonal = 1;
       } else if (inComponent[x][y] && !inComponent[x][y - 1]) {
+        // East.
         ++x;
+        xDiagonal = -1;
+        yDiagonal = 1;
       } else if (inComponent[x - 1][y] && !inComponent[x][y]) {
+        // South.
         ++y;
+        xDiagonal = -1;
+        yDiagonal = -1;
       } else if (inComponent[x - 1][y - 1] && !inComponent[x - 1][y]) {
+        // West.
         --x;
+        xDiagonal = 1;
+        yDiagonal = -1;
       }
-      polygon.push({ x: x, y: y });
+      polygon.push({
+        x: x, y: y,
+        diagonal: { x: xDiagonal, y: yDiagonal }
+      });
       if (x == x0 && y == y0) {
         break;
       }
@@ -439,6 +455,7 @@ var Snake = (function () {
         angle, a,
         tx, x, y,
         polygon,
+        v,
         i;
 
     context.fillStyle = color.wall;
@@ -448,18 +465,14 @@ var Snake = (function () {
     context.strokeStyle = color.obstacle.stroke;
     context.fillStyle = color.obstacle.fill;
     obstacles.forEach(function (obstacle) {
-      /*
-      obstacle.cells.forEach(function (cell) {
-        context.fillRect(w + cell.x * s, w + cell.y * s, s, s);
-        context.strokeRect(w + cell.x * s, w + cell.y * s, s, s);
-      });
-      */
       polygon = obstacle.polygon;
       context.beginPath();
-      context.moveTo(w + polygon[polygon.length - 1].x * s,
-                     w + polygon[polygon.length - 1].y * s);
-      polygon.forEach(function (vertex) {
-        context.lineTo(w + vertex.x * s, w + vertex.y * s);
+      v = polygon[polygon.length - 1];
+      context.moveTo(w + (v.x + v.diagonal.x * 0.1) * s,
+                     w + (v.y + v.diagonal.y * 0.1) * s);
+      polygon.forEach(function (v) {
+        context.lineTo(w + (v.x + v.diagonal.x * 0.1) * s,
+                       w + (v.y + v.diagonal.y * 0.1) * s);
       });
       context.fill();
     });
