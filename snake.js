@@ -171,9 +171,10 @@ var Snake = (function () {
   function componentToPolygon(cells) {
     var inComponent = {},
         polygon = [],
+        edge,
+        previous, current,
         i, cell,
-        x, y, x0, y0,
-        xDiagonal, yDiagonal;
+        x, y, x0, y0, dx, dy;
     for (x = 0; x < numCols; ++x) {
       inComponent[x] = {};
     }
@@ -192,35 +193,43 @@ var Snake = (function () {
     x = x0;
     y = y0;
     while (true) {
+      edge = { x: x, y: y };
       if (inComponent[x][y - 1] && !inComponent[x - 1][y - 1]) {
         // North.
-        --y;
-        xDiagonal = 1;
-        yDiagonal = 1;
+        edge.next = { dx: 0, dy: -1 };
+        edge.inward = { dx: 1, dy: 0 };
       } else if (inComponent[x][y] && !inComponent[x][y - 1]) {
         // East.
-        ++x;
-        xDiagonal = -1;
-        yDiagonal = 1;
+        edge.next = { dx: 1, dy: 0 };
+        edge.inward = { dx: 0, dy: 1 };
       } else if (inComponent[x - 1][y] && !inComponent[x][y]) {
         // South.
-        ++y;
-        xDiagonal = -1;
-        yDiagonal = -1;
+        edge.next = { dx: 0, dy: 1 };
+        edge.inward = { dx: -1, dy: 0 };
       } else if (inComponent[x - 1][y - 1] && !inComponent[x - 1][y]) {
         // West.
-        --x;
-        xDiagonal = 1;
-        yDiagonal = -1;
+        edge.next = { dx: -1, dy: 0 };
+        edge.inward = { dx: 0, dy: -1 };
       }
-      polygon.push({
-        x: x, y: y,
-        diagonal: { x: xDiagonal, y: yDiagonal }
-      });
+      polygon.push(edge);
+      x += edge.next.dx;
+      y += edge.next.dy;
       if (x == x0 && y == y0) {
         break;
       }
     }
+    // Make corners.
+    previous = polygon[polygon.length - 1];
+    for (i = 0; i < polygon.length; ++i) {
+      current = polygon[i];
+      dx = current.inward.dx + previous.inward.dx;
+      dy = current.inward.dy + previous.inward.dy;
+      dx = Math.min(Math.max(-1, dx), 1);
+      dy = Math.min(Math.max(-1, dy), 1);
+      current.corner = { x: current.x + dx * 0.1, y: current.y + dy * 0.1 };
+      previous = current;
+    }
+    console.log(JSON.stringify(polygon));
     return polygon;
   }
 
@@ -455,7 +464,7 @@ var Snake = (function () {
         angle, a,
         tx, x, y,
         polygon,
-        v,
+        edge,
         i;
 
     context.fillStyle = color.wall;
@@ -467,12 +476,12 @@ var Snake = (function () {
     obstacles.forEach(function (obstacle) {
       polygon = obstacle.polygon;
       context.beginPath();
-      v = polygon[polygon.length - 1];
-      context.moveTo(w + (v.x + v.diagonal.x * 0.1) * s,
-                     w + (v.y + v.diagonal.y * 0.1) * s);
-      polygon.forEach(function (v) {
-        context.lineTo(w + (v.x + v.diagonal.x * 0.1) * s,
-                       w + (v.y + v.diagonal.y * 0.1) * s);
+      edge = polygon[polygon.length - 1];
+      context.moveTo(w + edge.corner.x * s,
+                     w + edge.corner.y * s);
+      polygon.forEach(function (edge) {
+        context.lineTo(w + edge.corner.x * s,
+                       w + edge.corner.y * s);
       });
       context.fill();
     });
@@ -895,6 +904,7 @@ var Snake = (function () {
         window.requestAnimationFrame(fadeIn);
       }
     }
+    levelIndex += 1;
     loadLevel(levelIndex);
     canvas.style.opacity = 0;
     fadeStart = Date.now();
@@ -926,7 +936,7 @@ var Snake = (function () {
     startGameButton.disabled = true;
     lives.current = lives.initial;
     displayLives();
-    levelIndex = 0;
+    levelIndex = -1;
     startLevel();
     pauseGameButton.style.display = 'inline';
   }
