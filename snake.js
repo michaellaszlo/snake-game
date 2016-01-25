@@ -27,7 +27,7 @@ var Snake = (function () {
                  ' O          ',
                  '            ' ],
           numFood: 1,
-          targetLength: 10
+          targetLength: 6
         },
         { map: [ '      O  O  ',
                  ' O          ',
@@ -42,13 +42,13 @@ var Snake = (function () {
                  '     X      ',
                  '   xxx      ' ],
           numFood: 1,
-          targetLength: 10
+          targetLength: 6
         }
       ],
       level,
       levelIndex,
       lives = {
-        initial: 1
+        initial: 3
       },
       direction,
       previousDirection,
@@ -58,6 +58,10 @@ var Snake = (function () {
       },
       shape = {
         food: 7
+      },
+      chips = {
+        max: 4,
+        coverage: 0.9
       },
       color = {
         wall: '#bdbca8',
@@ -170,11 +174,14 @@ var Snake = (function () {
 
   function componentToPolygon(cells) {
     var inComponent = {},
+        edges = [],
         polygon = [],
         edge,
         previous, current,
-        i, cell,
-        x, y, x0, y0, dx, dy, dr, angle;
+        cell,
+        x, y, x0, y0,
+        numChips, outerSpan, innerSpan, left, peak,
+        i, j;
     for (x = 0; x < numCols; ++x) {
       inComponent[x] = {};
     }
@@ -211,33 +218,26 @@ var Snake = (function () {
         edge.next = { dx: -1, dy: 0 };
         edge.inward = { dx: 0, dy: -1 };
       }
-      polygon.push(edge);
+      edges.push(edge);
       x += edge.next.dx;
       y += edge.next.dy;
       if (x == x0 && y == y0) {
         break;
       }
     }
-    // Make corners.
-    dr = 0.05;
-    previous = polygon[polygon.length - 1];
-    for (i = 0; i < polygon.length; ++i) {
-      current = polygon[i];
-      dx = current.inward.dx + previous.inward.dx;
-      dy = current.inward.dy + previous.inward.dy;
-      dx = Math.min(Math.max(-1, dx), 1);
-      dy = Math.min(Math.max(-1, dy), 1);
-      // Regular corner.
-      x = current.x + dx * dr;
-      y = current.y + dy * dr;
-      // Random variation.
-      angle = Math.random() * 2 * pi;
-      d = Math.max(Math.random(), Math.random()) * dr;
-      current.corner = {
-        x: x + Math.cos(angle) * d,
-        y: y + Math.sin(angle) * d
-      };
+    current = edges[edges.length - 1];
+    for (i = 0; i < edges.length; ++i) {
       previous = current;
+      current = edges[i];
+      polygon.push({ x: current.x, y: current.y });
+      numChips = Math.floor(chips.max * Math.random());
+      outerSpan = 1 / numChips;
+      innerSpan = chips.coverage * outerSpan;
+      left = (outerSpan - innerSpan) / 2;
+      for (j = 0; j < numChips; ++j) {
+        peak = left + Math.random() * innerSpan;
+        left += outerSpan;
+      }
     }
     return polygon;
   }
@@ -473,7 +473,7 @@ var Snake = (function () {
         angle, a,
         tx, x, y,
         polygon,
-        edge,
+        point,
         i;
 
     context.fillStyle = color.wall;
@@ -485,12 +485,12 @@ var Snake = (function () {
     obstacles.forEach(function (obstacle) {
       polygon = obstacle.polygon;
       context.beginPath();
-      edge = polygon[polygon.length - 1];
-      context.moveTo(w + edge.corner.x * s,
-                     w + edge.corner.y * s);
-      polygon.forEach(function (edge) {
-        context.lineTo(w + edge.corner.x * s,
-                       w + edge.corner.y * s);
+      point = polygon[polygon.length - 1];
+      context.moveTo(w + point.x * s,
+                     w + point.y * s);
+      polygon.forEach(function (point) {
+        context.lineTo(w + point.x * s,
+                       w + point.y * s);
       });
       context.fill();
     });
@@ -828,7 +828,7 @@ var Snake = (function () {
       container.levelTarget.children[level.targetLength - snake.length].
           className += ' achieved';
       if (snake.length == level.targetLength) {
-        events.queue.push({ fun: endLevel, interrupt: true });
+        events.queue.push({ fun: succeed, interrupt: true });
       } else {
         events.queue.push({ fun: function () {
           removeFood(item.node);
@@ -859,6 +859,11 @@ var Snake = (function () {
       displayLives();
       endLevel();
     }
+  }
+
+  function succeed() {
+    levelIndex = (levelIndex + 1) % levels.length;
+    startLevel();
   }
 
   function stopGame(message) {
@@ -913,7 +918,6 @@ var Snake = (function () {
         window.requestAnimationFrame(fadeIn);
       }
     }
-    levelIndex = (levelIndex + 1) % levels.length;
     loadLevel(levelIndex);
     canvas.style.opacity = 0;
     fadeStart = Date.now();
@@ -945,7 +949,7 @@ var Snake = (function () {
     startGameButton.disabled = true;
     lives.current = lives.initial;
     displayLives();
-    levelIndex = -1;
+    levelIndex = 0;
     startLevel();
     pauseGameButton.style.display = 'inline';
   }
