@@ -60,8 +60,11 @@ var Snake = (function () {
         food: 7
       },
       chips = {
-        max: 4,
-        coverage: 0.9
+        minNum: 1,
+        maxNum: 4,
+        coverage: 0.90,
+        minDepth: 0.05,
+        maxDepth: 0.15
       },
       color = {
         wall: '#bdbca8',
@@ -180,7 +183,7 @@ var Snake = (function () {
         previous, current,
         cell,
         x, y, x0, y0,
-        numChips, outerSpan, innerSpan, left, peak,
+        numChips, outerSpan, innerSpan, gap, left, peak,
         i, j;
     for (x = 0; x < numCols; ++x) {
       inComponent[x] = {};
@@ -229,14 +232,32 @@ var Snake = (function () {
     for (i = 0; i < edges.length; ++i) {
       previous = current;
       current = edges[i];
-      polygon.push({ x: current.x, y: current.y });
-      numChips = Math.floor(chips.max * Math.random());
+      x = current.x;
+      y = current.y;
+      polygon.push({ x: x, y: y });
+      numChips = chips.minNum + Math.floor(Math.random() *
+          (chips.maxNum - chips.minNum));
       outerSpan = 1 / numChips;
       innerSpan = chips.coverage * outerSpan;
+      gap = outerSpan - innerSpan;
       left = (outerSpan - innerSpan) / 2;
       for (j = 0; j < numChips; ++j) {
         peak = left + Math.random() * innerSpan;
+        depth = chips.minDepth + Math.random() *
+            (chips.maxDepth - chips.minDepth);
         left += outerSpan;
+        polygon.push({
+          x: x + (peak - gap) * current.next.dx,
+          y: y + (peak - gap) * current.next.dy
+        });
+        polygon.push({
+          x: x + peak * current.next.dx + depth * current.inward.dx,
+          y: y + peak * current.next.dy + depth * current.inward.dy
+        });
+        polygon.push({
+          x: x + (peak + gap) * current.next.dx,
+          y: y + (peak + gap) * current.next.dy
+        });
       }
     }
     return polygon;

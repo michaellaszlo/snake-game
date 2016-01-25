@@ -20,11 +20,12 @@ nav assist
 - queued moves on grid
 
 better graphics
-- randomized wall vertices
+- flecked obstacle surface
+- make wall similar to obstacles
 - animated collision
 - animated eating
 - paint floor tiles
-- vary obstacle colors and textures
+- vary obstacle colors and textures per level
 - stripe?
 - hug wall?
 
