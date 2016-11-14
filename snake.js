@@ -16,6 +16,17 @@ var Snake = (function () {
       snake,
       previousTail,
       levels = [
+        { map: [ '        ',
+                 ' O    O ',
+                 '        ',
+                 '   OO   ',
+                 '   OO   ',
+                 '        ',
+                 'xO    O ',
+                 'xX      ' ],
+          numFood: 1,
+          targetLength: 8
+        },
         { map: [ '            ',
                  '          O ',
                  '  OO        ',
