@@ -29,7 +29,7 @@ var Snake = (function () {
                  ' O          ',
                  '            ' ],
           numFood: 1,
-          targetLength: 8
+          targetLength: 15
         },
         { map: [ '      O  O  ',
                  ' O          ',
@@ -44,7 +44,7 @@ var Snake = (function () {
                  '     X      ',
                  '   xxx      ' ],
           numFood: 2,
-          targetLength: 10
+          targetLength: 25
         },
         { map: [ '  O    ',
                  '    O  ',
@@ -892,7 +892,6 @@ var Snake = (function () {
 
   function keyDownHandler(event) {
     var action;
-    console.log(event.keyCode);
     if (event.keyCode in keyCodeToAction) {
       action = keyCodeToAction[event.keyCode];
       if (action === 'pause') {

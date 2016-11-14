@@ -5,10 +5,10 @@
 You control a snake with a cluster of four keys. You can use the WASD,
 IJKL, or arrow-key cluster.
 
-- W I &uarr;
-- A J &larr;
-- S K &darr;
-- D L &rarr;
+- W / I / &uarr;: north
+- A / J / &larr;: west
+- S / K / &darr;: south
+- D / L / &rarr;: east
 
 Eat the green gems to grow. Avoid the brown blocks and walls.
 
