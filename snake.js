@@ -43,6 +43,15 @@ var Snake = (function () {
                  '   xxx      ' ],
           numFood: 2,
           targetLength: 10
+        },
+        { map: [ '  O    ',
+                 '    O  ',
+                 '  O    ',
+                 ' X  O  ',
+                 ' xO    ',
+                 ' x  O  ' ],
+          numFood: 1,
+          targetLength: 12
         }
       ],
       level,
