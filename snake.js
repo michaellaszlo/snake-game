@@ -1,4 +1,6 @@
 var Snake = (function () {
+  'use strict';
+
   var hertz = 5,
       tick = {
         span: 1000 / hertz
@@ -186,13 +188,11 @@ var Snake = (function () {
 
   function componentToPolygon(cells) {
     var mark = {},
-        edges = [],
         polygon = [],
         edge,
         previous, current,
         cell,
-        x, y, x0, y0,
-        numChips, outerSpan, innerSpan, gap, left, peak,
+        x, y, x0, y0, dx, dy, dr, d, angle,
         i, j;
     for (x = -1; x <= numCols; ++x) {
       mark[x] = {};
@@ -230,44 +230,32 @@ var Snake = (function () {
         edge.next = { dx: -1, dy: 0 };
         edge.inward = { dx: 0, dy: -1 };
       }
-      edges.push(edge);
+      polygon.push(edge);
       x += edge.next.dx;
       y += edge.next.dy;
       if (x == x0 && y == y0) {
         break;
       }
     }
-    current = edges[edges.length - 1];
-    for (i = 0; i < edges.length; ++i) {
-      previous = current;
-      current = edges[i];
-      x = current.x;
-      y = current.y;
-      polygon.push({ x: x, y: y });
-      numChips = chips.minNum + Math.floor(Math.random() *
-          (chips.maxNum - chips.minNum));
-      outerSpan = 1 / numChips;
-      innerSpan = chips.coverage * outerSpan;
-      gap = outerSpan - innerSpan;
-      left = (outerSpan - innerSpan) / 2;
-      for (j = 0; j < numChips; ++j) {
-        peak = left + Math.random() * innerSpan;
-        depth = chips.minDepth + Math.random() *
-            (chips.maxDepth - chips.minDepth);
-        left += outerSpan;
-        polygon.push({
-          x: x + (peak - gap) * current.next.dx,
-          y: y + (peak - gap) * current.next.dy
-        });
-        polygon.push({
-          x: x + peak * current.next.dx + depth * current.inward.dx,
-          y: y + peak * current.next.dy + depth * current.inward.dy
-        });
-        polygon.push({
-          x: x + (peak + gap) * current.next.dx,
-          y: y + (peak + gap) * current.next.dy
-        });
-      }
+    // Make corners.
+    dr = 0.03;
+    previous = polygon[polygon.length - 1];
+    for (i = 0; i < polygon.length; ++i) {
+      current = polygon[i];
+      dx = current.inward.dx + previous.inward.dx;
+      dy = current.inward.dy + previous.inward.dy;
+      dx = Math.min(Math.max(-1, dx), 1);
+      dy = Math.min(Math.max(-1, dy), 1);
+      // Regular corner.
+      x = current.x + dx * dr;
+      y = current.y + dy * dr;
+      // Random variation.
+      angle = Math.random() * 2 * pi;
+      d = Math.max(Math.random(), Math.random()) * dr;
+      current.corner = {
+        x: x + Math.cos(angle) * d,
+        y: y + Math.sin(angle) * d
+      };
     }
     return polygon;
   }
@@ -503,7 +491,7 @@ var Snake = (function () {
         angle, a,
         tx, x, y,
         polygon,
-        point,
+        edge,
         i;
 
     context.fillStyle = color.wall;
@@ -515,12 +503,12 @@ var Snake = (function () {
     obstacles.forEach(function (obstacle) {
       polygon = obstacle.polygon;
       context.beginPath();
-      point = polygon[polygon.length - 1];
-      context.moveTo(w + point.x * s,
-                     w + point.y * s);
-      polygon.forEach(function (point) {
-        context.lineTo(w + point.x * s,
-                       w + point.y * s);
+      edge = polygon[polygon.length - 1];
+      context.moveTo(w + edge.corner.x * s,
+                     w + edge.corner.y * s);
+      polygon.forEach(function (edge) {
+        context.lineTo(w + edge.corner.x * s,
+                       w + edge.corner.y * s);
       });
       context.fill();
     });
