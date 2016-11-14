@@ -53,7 +53,7 @@ var Snake = (function () {
                  ' xO    ',
                  ' x  O  ' ],
           numFood: 1,
-          targetLength: 12
+          targetLength: 11
         }
       ],
       level,
@@ -333,7 +333,6 @@ var Snake = (function () {
     container.levelTarget.innerHTML = '';
     for (i = 0; i < level.targetLength; ++i) {
       element = document.createElement('span');
-      element.innerHTML = '&#x25a0;';
       element.className = 'segment';
       if (level.targetLength - i <= snake.length) {
         element.className += ' achieved';
@@ -777,7 +776,7 @@ var Snake = (function () {
     elapsed = Date.now() - tick.start;
     if (elapsed < tick.span) {
       paintCanvas(elapsed / tick.span);
-      window.requestAnimationFrame(gameStep);
+      requestAnimationFrame(gameStep);
       return;
     }
 
@@ -856,14 +855,14 @@ var Snake = (function () {
     }
 
     paintCanvas(0);
-    window.requestAnimationFrame(gameStep);
+    requestAnimationFrame(gameStep);
   }
 
   function finalAnimation() {
     var elapsed = Date.now() - tick.start;
     paintCanvas(elapsed / tick.span);
     if (elapsed < tick.span) {
-      window.requestAnimationFrame(finalAnimation);
+      requestAnimationFrame(finalAnimation);
     }
   }
 
@@ -893,6 +892,7 @@ var Snake = (function () {
 
   function keyDownHandler(event) {
     var action;
+    console.log(event.keyCode);
     if (event.keyCode in keyCodeToAction) {
       action = keyCodeToAction[event.keyCode];
       if (action === 'pause') {
@@ -933,7 +933,7 @@ var Snake = (function () {
       } else {
         canvas.style.opacity = seconds / duration.prologue;
         paintCanvas(0.99999);
-        window.requestAnimationFrame(fadeIn);
+        requestAnimationFrame(fadeIn);
       }
     }
     loadLevel(levelIndex);
@@ -951,7 +951,7 @@ var Snake = (function () {
       } else {
         canvas.style.opacity = 1 - seconds / duration.epilogue;
         paintCanvas(0);
-        window.requestAnimationFrame(fadeOut);
+        requestAnimationFrame(fadeOut);
       }
     }
     status.gameInProgress = false;
@@ -986,7 +986,7 @@ var Snake = (function () {
         keyCodeToAction[keyCode] = direction;
       });
     }
-    window.onkeydown = keyDownHandler.bind(this);
+    onkeydown = keyDownHandler.bind(this);
 
     container.currentLevel = document.getElementById('currentLevel');
     container.spareLives = document.getElementById('spareLives');
@@ -1007,4 +1007,4 @@ var Snake = (function () {
   };
 })();
 
-window.onload = Snake.init;
+onload = Snake.init;

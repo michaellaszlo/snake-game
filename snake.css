@@ -25,12 +25,16 @@ button, #currentLevel, #spareLives, #levelTarget, #message, #actionBox {
 }
 
 #levelTarget .segment {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
   padding: 0;
-  color: #2e607f;
   margin-right: 1px;
+  border: 1px solid #333;
+  background: #eee;
 }
 #levelTarget .achieved {
-  color: #b6c7ce;
+  background: #333;
 }
 
 #actionBox {
