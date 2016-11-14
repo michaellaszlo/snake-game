@@ -27,7 +27,7 @@ var Snake = (function () {
                  ' O          ',
                  '            ' ],
           numFood: 1,
-          targetLength: 6
+          targetLength: 8
         },
         { map: [ '      O  O  ',
                  ' O          ',
@@ -41,14 +41,14 @@ var Snake = (function () {
                  '    O     O ',
                  '     X      ',
                  '   xxx      ' ],
-          numFood: 1,
-          targetLength: 6
+          numFood: 2,
+          targetLength: 10
         }
       ],
       level,
       levelIndex,
       lives = {
-        initial: 3
+        initial: 1
       },
       direction,
       previousDirection,
@@ -176,7 +176,7 @@ var Snake = (function () {
   }
 
   function componentToPolygon(cells) {
-    var inComponent = {},
+    var mark = {},
         edges = [],
         polygon = [],
         edge,
@@ -185,15 +185,15 @@ var Snake = (function () {
         x, y, x0, y0,
         numChips, outerSpan, innerSpan, gap, left, peak,
         i, j;
-    for (x = 0; x < numCols; ++x) {
-      inComponent[x] = {};
+    for (x = -1; x <= numCols; ++x) {
+      mark[x] = {};
     }
-    // Cache cell locations and find a cell with no northern neighbor.
+    // Mark cell locations and find a cell with no northern neighbor.
     for (i = 0; i < cells.length; ++i) {
       cell = cells[i];
       x = cell.x;
       y = cell.y;
-      inComponent[x][y] = true;
+      mark[x][y] = true;
       if (x0 === undefined && (y == 0 || isEmpty(x, y - 1))) {
         x0 = x;
         y0 = y;
@@ -204,19 +204,19 @@ var Snake = (function () {
     y = y0;
     while (true) {
       edge = { x: x, y: y };
-      if (inComponent[x][y - 1] && !inComponent[x - 1][y - 1]) {
+      if (mark[x][y - 1] && !mark[x - 1][y - 1]) {
         // North.
         edge.next = { dx: 0, dy: -1 };
         edge.inward = { dx: 1, dy: 0 };
-      } else if (inComponent[x][y] && !inComponent[x][y - 1]) {
+      } else if (mark[x][y] && !mark[x][y - 1]) {
         // East.
         edge.next = { dx: 1, dy: 0 };
         edge.inward = { dx: 0, dy: 1 };
-      } else if (inComponent[x - 1][y] && !inComponent[x][y]) {
+      } else if (mark[x - 1][y] && !mark[x][y]) {
         // South.
         edge.next = { dx: 0, dy: 1 };
         edge.inward = { dx: -1, dy: 0 };
-      } else if (inComponent[x - 1][y - 1] && !inComponent[x - 1][y]) {
+      } else if (mark[x - 1][y - 1] && !mark[x - 1][y]) {
         // West.
         edge.next = { dx: -1, dy: 0 };
         edge.inward = { dx: 0, dy: -1 };
